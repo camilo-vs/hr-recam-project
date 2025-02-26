@@ -1,0 +1,13 @@
+.bg-image {
+    background-image: url('../img/log-laser.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 86vh;
+    width: 100%;
+    border-top-right-radius: .3rem;
+    border-bottom-right-radius: .3rem;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+}
