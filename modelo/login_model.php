@@ -13,9 +13,9 @@ class login_model
 
     public function logear($data)
     {
-        mysqli_select_db($this->db, "hr_system");
         // Validar si el usuario está registrado
         $UsuarioAlta = $this->validarCuenta($data);
+    
         if ($UsuarioAlta['numero_registros'] == 0) {
             $respuesta = array(
                 'error' => true,
@@ -25,27 +25,27 @@ class login_model
                 'activo' => false
             );
         } else {
+            mysqli_select_db($this->db, "hr_system");
             // Preparar y ejecutar la consulta para obtener el hash de la contraseña y otros datos
-            $sql = "SELECT id,name,active,user_type_id,password FROM users WHERE id = ".$data['usuario']."";
-        
-            $result = mysqli_query($this->db, $sql);
-
-
-            if ($result) {
+            $sql = "SELECT id, name, user_type, password FROM users WHERE name = ?";
+            $stmt = mysqli_prepare($this->db, $sql);
+    
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, 's', $data['usuario']);  // Cambié 'name' por 'usuario'
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
                 $row = mysqli_fetch_assoc($result);
-
+    
                 // Verificar la contraseña
                 if ($row && password_verify($data['password'], $row['password'])) {
                     // La contraseña es correcta, iniciar sesión
                     if (session_status() == PHP_SESSION_NONE) {
                         session_start();
                     }
-
+    
                     $_SESSION['id'] = $row['id'];
-                    $_SESSION['name'] = $row['name'];
-                    $_SESSION['active'] = $row['active'];
-                    $_SESSION['user_type'] = $row['user_type_id'];
-
+                    $_SESSION['usuario'] = $row['name'];  // Cambié 'usuario' por 'name'
+                    $_SESSION['user_type'] = $row['user_type'];
                     $respuesta = array(
                         'error' => false,
                         'msg' => 'Bienvenido',
@@ -65,6 +65,8 @@ class login_model
                         'activo' => false
                     );
                 }
+    
+                mysqli_stmt_close($stmt);
             } else {
                 $respuesta = array(
                     'error' => true,
@@ -76,13 +78,12 @@ class login_model
                 );
             }
         }
-  
+    
         echo json_encode($respuesta);
     }
-
+    
     public function validarCuenta($data)
     {
-        mysqli_select_db($this->db, "hr_system");
         // Validación del nombre de usuario: asegurar que esté correctamente formateado (puedes agregar más validaciones si es necesario)
         if (empty($data['usuario'])) {
             return array(
@@ -93,31 +94,36 @@ class login_model
                 'numero_registros' => 0
             );
         }
-
-        $usuario = intval($data['usuario']);
+        $usuario = trim($data['usuario']);  // Usar 'usuario' en lugar de 'name' aquí también
+        mysqli_select_db($this->db, "hr_system");
         // Preparar la consulta SQL para verificar si el usuario existe
-        $sql = "SELECT COUNT(id) as total FROM users WHERE id = ". $usuario."";
-        $result = mysqli_query($this->db, $sql);
+        $sql = "SELECT COUNT(id) as total FROM users WHERE name = ?"; 
+        $stmt = mysqli_prepare($this->db, $sql);
     
-        if (!$result) {
-            $respuesta = array(
-                'error' => true,
-                'msg' => 'Error en la consulta: ' . mysqli_error($this->db),
-                'sql' => $sql,
-                'registros' => '',
-                'numero_registros' => ''
-            );
-        } else {
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 's', $usuario);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             $row = mysqli_fetch_assoc($result);
             $numero_registros = $row['total'];
-            $respuesta = array(
+    
+            mysqli_stmt_close($stmt);
+    
+            return array(
                 'error' => false,
-                'msg' => 'Todo bien',
+                'msg' => 'Todo Bien',
                 'sql' => $sql,
                 'registros' => $row,
                 'numero_registros' => $numero_registros
             );
+        } else {
+            return array(
+                'error' => true,
+                'msg' => 'Error en la consulta: ' . mysqli_error($this->db),
+                'sql' => $sql,
+                'registros' => '',
+                'numero_registros' => 0
+            );
         }
-        return $respuesta;
-    }
+}
 }

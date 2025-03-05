@@ -38,7 +38,7 @@
 
       // Realizar la petición AJAX
       $.ajax({
-        url: 'index.php?c=registro&m=registro',
+        url: 'index.php?c=registro&m=registro', // Cambia esta URL por la ruta correcta en tu servidor
         type: 'POST',
         data: {
           nombre: nombre,
@@ -84,7 +84,7 @@
 
 <body>
   <!-- Contenido -->
-  <div id="formregistro" class="container-xxl">
+  <div class="container-xxl">
     <div class="authentication-wrapper authentication-basic container-p-y">
       <div class="authentication-inner">
         <!-- Tarjeta de Registro -->
@@ -128,6 +128,13 @@
               </div>
               <button type="submit" class="btn btn-primary d-grid w-100">Registrarse</button>
             </form>
+
+            <p class="text-center">
+              <span>¿Ya tienes una cuenta?</span>
+              <a href="index.php?c=paginas&m=home">
+                <span>Iniciar sesión</span>
+              </a>
+            </p>
           </div>
         </div>
         <!-- Tarjeta de Registro -->

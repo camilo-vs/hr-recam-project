@@ -4,6 +4,7 @@ require_once('modelo/registro_model.php');
 
 class registro_controller
 {
+
     function __construct()
     {
         $this->model = new registro_model();

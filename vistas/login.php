@@ -29,7 +29,6 @@
         success: function(response) {
           var respuesta = JSON.parse(response);
           // Dependiendo de la respuesta, puedes redirigir o mostrar un error
-         
           if (respuesta.error == false) {
             localStorage.setItem('usuario', JSON.stringify(respuesta.registros));
             // Redirigir al usuario a la página principal

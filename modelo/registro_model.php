@@ -15,7 +15,7 @@ class registro_model
     {
         // Verificar si el nombre de usuario ya está registrado
         $usuarioExistente = $this->validarCuenta($data); // Puedes reutilizar la misma función que usas en el login
-
+    
         if ($usuarioExistente['numero_registros'] > 0) {
             // Si el usuario ya existe, retornar un mensaje de error
             $respuesta = array(
@@ -28,53 +28,47 @@ class registro_model
         } else {
             // Si el usuario no existe, proceder con el registro
             mysqli_select_db($this->db, "hr_system");
-
-$contraseñaHash = password_hash($data['contraseña'], PASSWORD_BCRYPT);
-
-$name = $data['nombre'];
-$active = 1; 
-$user_type = 1;
-$created_by = 1; 
-$updated_by = 1;
-
-
-$values = "'" . mysqli_real_escape_string($this->db, $name) . "', " . 
-          (int)$active . ", '" . mysqli_real_escape_string($this->db, $contraseñaHash) . "', '" . 
-          mysqli_real_escape_string($this->db, $user_type) . "', " . 
-          (int)$created_by . ", " . (int)$updated_by;
-
-
-$sql = "INSERT INTO users (name, active, password, user_type_id, created_by, updated_by) VALUES ($values)";
-
-// Ejecutar la consulta preparada
-$stmt = mysqli_prepare($this->db, $sql);
-
-if ($stmt) {
-    // Ejecutar la consulta
-    $success = mysqli_stmt_execute($stmt);
-
-    if ($success) {
-        // Registro exitoso
-        $respuesta = array(
-            'error' => false,
-            'msg' => 'Usuario registrado exitosamente',
-            'sql' => $sql,
-            'numero_registros' => 1,
-            'activo' => true
-        );
-    } else {
-        // Error al registrar el usuario
-        $respuesta = array(
-            'error' => true,
-            'msg' => 'Hubo un error al registrar el usuario.',
-            'sql' => $sql,
-            'numero_registros' => 0,
-            'activo' => false
-        );
-    }
-
-    // Cerrar la declaración
-    mysqli_stmt_close($stmt);
+    
+            // Cifrar la contraseña
+            $contraseñaHash = password_hash($data['contraseña'], PASSWORD_BCRYPT);
+    
+            // Preparar la consulta SQL para insertar el nuevo usuario
+            $sql = "INSERT INTO users (name, active, password, user_type, created_by, updated_by) 
+                    VALUES (?, ?, ?, ?, ?, ?)";
+    
+            
+            $stmt = mysqli_prepare($this->db, $sql);
+    
+            if ($stmt) {
+                // Asociar los parámetros a la consulta
+                $tipo_usuario = 'usuario';
+                $general = 1;
+                mysqli_stmt_bind_param($stmt, 'sissii', $data['nombre'], $general, $contraseñaHash ,$general,$general,$general);
+                // Ejecutar la consulta
+                $success = mysqli_stmt_execute($stmt);
+    
+                if ($success) {
+                    // Registro exitoso
+                    $respuesta = array(
+                        'error' => false,
+                        'msg' => 'Usuario registrado exitosamente',
+                        'sql' => $sql,
+                        'numero_registros' => 1,
+                        'activo' => true
+                    );
+                } else {
+                    // Error al registrar el usuario
+                    $respuesta = array(
+                        'error' => true,
+                        'msg' => 'Hubo un error al registrar el usuario.',
+                        'sql' => $sql,
+                        'numero_registros' => 0,
+                        'activo' => false
+                    );
+                }
+    
+                // Cerrar la declaración
+                mysqli_stmt_close($stmt);
             } else {
                 // Error en la consulta
                 $respuesta = array(
@@ -106,7 +100,6 @@ if ($stmt) {
         mysqli_select_db($this->db, "hr_system");
         // Preparar la consulta SQL para verificar si el usuario existe
         $sql = "SELECT COUNT(id) as total FROM users WHERE name = ?"; 
- 
         $stmt = mysqli_prepare($this->db, $sql);
 
         if ($stmt) {
