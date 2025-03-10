@@ -18,45 +18,34 @@ class usuarios_controller
 
     public function crearUsuario()
     {
-        $nombre = $_POST['firstname'];
-        $apellido = $_POST['lastname'];
-        $telefono = $_POST['phone'];
-        $email = $_POST['email'];
+        $data['userType'] = $_POST['userType'];
+        $data['username'] = $_POST['username'];
+        $data['confirmPassword'] = $_POST['confirmPassword'];
 
-        echo $this->model->crearUsuario($nombre, $apellido, $telefono, $email);
+        echo $this->model->crearUsuario($data);
     }
 
-    public function actualizarUsuario()
+    public function validarNombre(){
+        $data['name'] = $_POST['name'];
+
+        echo $this->model->validarNombre($data);
+    }
+
+    public function editarUsuario()
     {
-        $id = $_GET['id'];
-        $nombre = $_POST['firstname'];
-        $apellido = $_POST['lastname'];
-        $telefono = $_POST['phone'];
-        $email = $_POST['email'];
+        $data['id'] = $_POST['id'];
+        $data['userType'] = $_POST['userType'];
+        $data['username'] = $_POST['username'];
+        $data['confirmPassword'] = $_POST['confirmPassword'];
 
-        echo $this->model->actualizarUsuario($id, $nombre, $apellido, $telefono, $email);
+        echo $this->model->editarUsuario($data);
     }
 
-    public function eliminarUsuario()
+    public function cambiarEstado()
     {
-        $id = $_POST['id'];
-        echo $this->model->eliminarUsuario($id);
+        $data['id'] = $_POST['id'];
+        $data['estado'] = $_POST['estado'];
+        echo $this->model->cambiarEstado($data);
     }
-}
-
-// Manejo de las peticiones
-$controller = new usuarios_controller();
-
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-    if ($_GET['action'] === 'consultar') {
-        $controller->consultarUsuarios();
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action'])) {
-    if ($_GET['action'] === 'crear') {
-        $controller->crearUsuario();
-    } elseif ($_GET['action'] === 'actualizar') {
-        $controller->actualizarUsuario();
-    } elseif ($_GET['action'] === 'eliminar') {
-        $controller->eliminarUsuario();
-    }
+    
 }

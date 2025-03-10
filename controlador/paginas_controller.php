@@ -8,7 +8,7 @@ class paginas_controller
         }
     }
 
-    function home()
+    function login()
     {
         // Si la sesión está activa, redirigir al inicio
         if (isset($_SESSION['usuario'])) {
@@ -36,29 +36,30 @@ class paginas_controller
     {
         // Verificar si la sesión no está activa, redirigir al login
         if (!isset($_SESSION['usuario'])) {
-            header('Location: index.php?c=paginas&m=home');
+            header('Location: index.php?c=paginas&m=login');
             exit();
         }
 
-        include_once('vistas/header_inicio.php');
-        include_once('vistas/index.php');
+        include_once('vistas/logeado/header_inicio.php');
+        include_once('vistas/logeado/index.php');
     }
-    function usuarios()
+    function gestion_usuarios()
     {
         // Verificar si la sesión no está activa, redirigir al login
         if (!isset($_SESSION['usuario'])) {
-            header('Location: index.php?c=paginas&m=home');
+            header('Location: index.php?c=paginas&m=login');
             exit();
         }
 
-        include_once('vistas/table_employees.php');
+        include_once('vistas/logeado/header_inicio.php');
+        include_once('vistas/logeado/gestion_usuarios.php');
     }
 
     function logout()
     {
         // Destruir la sesión y redirigir al login
         session_destroy();
-        header('Location: index.php?c=paginas&m=home');
+        header('Location: index.php?c=paginas&m=login');
         exit();
     }
 }

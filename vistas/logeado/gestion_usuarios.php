@@ -1,8 +1,8 @@
 <script>
     //Funcionalidad al cargar la pagina
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Función para alternar la visibilidad de la contraseña - Contraseña
-        document.getElementById('togglePassword').addEventListener('click', function() {
+        document.getElementById('togglePassword').addEventListener('click', function () {
             var passwordField = document.getElementById('password');
             var passwordIcon = this.querySelector('i');
 
@@ -18,7 +18,7 @@
         });
 
         // Función para alternar la visibilidad de la contraseña - Verificar Contraseña
-        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function () {
             var confirmPasswordField = document.getElementById('confirmPassword');
             var confirmPasswordIcon = this.querySelector('i');
 
@@ -34,15 +34,26 @@
         });
 
         $('#userTable').datagrid({
-            onSelect: function(index, row) {
+            onSelect: function (index, row) {
                 // Habilitar botones cuando se selecciona una fila
-                $('#editButton').linkbutton('enable');
-                $('#bajaButton').linkbutton('enable');
+                if (row.estado != 'BAJA') {
+                    $('#editButton').linkbutton('enable');
+                    $('#bajaButton').linkbutton('enable');
+                } else {
+                    $('#editButton').linkbutton('disable');
+                    $('#bajaButton').linkbutton('enable');
+                }
+
             },
-            onUnselect: function(index, row) {
+            onUnselect: function (index, row) {
                 // Deshabilitar botones cuando se deselecciona la fila
-                $('#editButton').linkbutton('disable');
-                $('#bajaButton').linkbutton('disable');
+                if (row.estado != 'BAJA') {
+                    $('#editButton').linkbutton('enable');
+                    $('#bajaButton').linkbutton('enable');
+                } else {
+                    $('#editButton').linkbutton('disable');
+                    $('#bajaButton').linkbutton('enable');
+                }
             }
         });
 
@@ -51,7 +62,7 @@
             type: 'POST',
             dataType: 'json',
             cache: false,
-            success: function(respuesta) {
+            success: function (respuesta) {
                 if (respuesta.error === true) {
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
@@ -71,9 +82,9 @@
     function editUser() {
         $('#userForm').form('clear');
         var row = $('#userTable').datagrid('getSelected');
-        if(row.user_type == 'Administrador'){
+        if (row.user_type == 'Administrador') {
             tipo = 1;
-        }else{
+        } else {
             tipo = 2;
         }
         $('#userType').val(tipo);
@@ -113,21 +124,21 @@
                 dataType: 'json',
                 data: userData,
                 cache: false,
-                success: function(respuesta) {
+                success: function (respuesta) {
                     $.messager.progress('close');
 
                     if (respuesta.error === true) {
                         $.messager.alert('Error', respuesta.msg, 'error');
                     } else {
                         if (respuesta.creado) {
-                            if (respuesta.datos['user_type'] == 1) {
+                            if (respuesta.datos['userType'] == 1) {
                                 tipo = 'Administrador';
                             } else {
                                 tipo = 'Usuario';
                             }
                             var newRow = {
                                 id: respuesta.id,
-                                name: respuesta.datos['name'],
+                                name: respuesta.datos['username'],
                                 estado: 'ACTIVO',
                                 user_type: tipo,
                                 creation_date: new Date().toLocaleString('es-ES', {
@@ -148,7 +159,7 @@
                                 row: newRow
                             });
                             $('#userDialog').dialog('close');
-                            $.messager.alert('Se realizo la petición', 'Se creo el nuevo usuario!', 'success');
+                            $.messager.alert('Se realizo la petición', 'Se creo el nuevo usuario!', 'info');
                         } else {
                             $.messager.alert('Error', respuesta.msg, 'error');
                         }
@@ -161,38 +172,201 @@
         }
     }
 
-    function consultarNombre() {
+    function updateForm() {
+        var row = $('#userTable').datagrid('getSelected');
+
+        var index = $('#userTable').datagrid('getRowIndex', row);
+        var isValid = true;
+
+        var password = $('#password').val();
+        var confirmPassword = $('#confirmPassword').val();
+
+
+        if (row.user_type == 'Administrador') {
+            type_row = 1;
+        } else {
+            type_row = 2;
+        }
+        if (row.name == $('#username').val() && type_row == $('#userType').val() && password == '' && confirmPassword == '') {
+            $.messager.alert('Info', 'No se detecta ningun cambio.', 'info');
+            return;
+        }
+        if (!row) {
+            $.messager.alert('Error', 'Por favor selecciona un usuario para actualizar.', 'error');
+            return;
+        }
+
+        if (password !== '' || confirmPassword !== '') {
+            if (password !== confirmPassword) {
+                isValid = false;
+                $.messager.alert('Error', 'Las contraseñas no coinciden', 'error');
+                return;
+            }
+            var passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                $.messager.alert('Alerta', 'La contraseña debe tener al menos 8 caracteres, incluir un número y un carácter especial.', 'info');
+                return;
+            }
+        }
+
+        if (!$('#userForm')[0].checkValidity() && (password !== '' || confirmPassword !== '')) {
+            $.messager.alert('Alerta', 'Por favor complete todos los campos requeridos.', 'info');
+            return;
+        }
+
+        var userData = $('#userForm').serialize();
+        var userId = row.id;
+
+        userData += '&id=' + userId;
+
         $.ajax({
-            url: 'index.php?c=usuarios&m=validarNombre',
+            url: 'index.php?c=usuarios&m=editarUsuario',
             type: 'POST',
             dataType: 'json',
-            data: {
-                name: $('#username').val()
-            },
+            data: userData,
             cache: false,
-            success: function(respuesta) {
-                $('#alerta').remove();
+            success: function (respuesta) {
+                $.messager.progress('close');
+
                 if (respuesta.error === true) {
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
-                    if (respuesta.registros['total'] > 0) {
-                        $('#crearUsuario').prop('disabled', true);
-                        $('#label_nombre').after('<p id="alerta" style="color:red;font-size:13px">El nombre del usuario ya esta dado de alta.</p>');
+                    if (respuesta.cambio) {
+                        var tipo = (respuesta.datos['userType'] == 1) ? 'Administrador' : 'Usuario';
+                        var updatedData = {
+                            name: respuesta.datos['username'],
+                            user_type: tipo,
+                            update_date: new Date().toLocaleString('es-ES', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            }).replace(",", ""),
+                            updated_by: respuesta.created_by
+                        };
+
+                        $('#userTable').datagrid('updateRow', {
+                            index: index,
+                            row: updatedData
+                        });
+
+                        $('#userDialog').dialog('close');
+                        $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
                     } else {
-                        $('#crearUsuario').prop('disabled', false);
+                        $.messager.alert('Error', respuesta.msg, 'error');
                     }
                 }
+            },
+            error: function () {
+                $.messager.alert('Error', 'Hubo un problema al procesar la solicitud. Intenta nuevamente.', 'error');
             }
         });
     }
 
+
+    function cambiarEstado() {
+        var row = $('#userTable').datagrid('getSelected');
+        var index = $('#userTable').datagrid('getRowIndex', row);
+        if (row.estado == 'ACTIVO') {
+            cambio = 'BAJA';
+            estado = 2;
+        } else {
+            cambio = 'ACTIVO';
+            estado = 1;
+        }
+        $.messager.confirm('Confirmación', 'Se cambiara el estado a ' + cambio + ' del usuario ' + row.name + ' ¿Está seguro?', function (r) {
+            if (r) {
+                $.ajax({
+                    url: 'index.php?c=usuarios&m=cambiarEstado',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        id: row.id,
+                        estado: estado
+                    },
+                    cache: false,
+                    success: function (respuesta) {
+                        if (respuesta.error === true) {
+                            $.messager.alert('Error', respuesta.msg, 'error');
+                        } else {
+                            if (respuesta.cambio) {
+                                var updatedData = {
+                                    estado: cambio,
+                                    update_date: new Date().toLocaleString('es-ES', {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    }).replace(",", ""),
+                                    updated_by: respuesta.created_by
+                                };
+
+                                $('#userTable').datagrid('updateRow', {
+                                    index: index,
+                                    row: updatedData
+                                });
+                                if(estado == 1){
+                                    $('#editButton').linkbutton('enable');
+                                }else{
+                                    $('#editButton').linkbutton('disable');
+                                }
+                                $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
+                            } else {
+                                $.messager.alert('Error', respuesta.msg, 'error');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+    }
+
+
+    function consultarNombre() {
+        $('#alerta').remove();
+        var row = $('#userTable').datagrid('getSelected');
+        var name_actu = '';
+        if (row != null) {
+            name_actu = row.name;
+        }
+        if ($('#username').val() != name_actu) {
+            $.ajax({
+                url: 'index.php?c=usuarios&m=validarNombre',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    name: $('#username').val()
+                },
+                cache: false,
+                success: function (respuesta) {
+
+                    if (respuesta.error === true) {
+                        $.messager.alert('Error', respuesta.msg, 'error');
+                    } else {
+                        if (respuesta.registros['total'] > 0) {
+                            $('#crearUsuario').prop('disabled', true);
+                            $('#label_nombre').after('<p id="alerta" style="color:red;font-size:13px">El nombre del usuario ya esta dado de alta.</p>');
+                        } else {
+                            $('#crearUsuario').prop('disabled', false);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
     //COLORES DE CELDAS
-    $(function() {
+    $(function () {
         var dg = $('#userTable');
 
         // Definir el estilo dinámico en base a la columna 'estado'
         var estadoCol = dg.datagrid('getColumnOption', 'estado');
-        estadoCol.styler = function(value, row, index) {
+        estadoCol.styler = function (value, row, index) {
             if (value === 'ACTIVO') {
                 return 'background-color: green; color: white; font-weight: bold;';
             } else if (value === 'BAJA') {
@@ -204,7 +378,7 @@
 
         // Definir el estilo dinámico en base a la columna 'user_type'
         var userTypeCol = dg.datagrid('getColumnOption', 'user_type');
-        userTypeCol.styler = function(value, row, index) {
+        userTypeCol.styler = function (value, row, index) {
             if (value === 'Administrador') {
                 return 'background-color: blue; color: white; font-weight: bold;';
             } else if (value === 'Usuario') {
@@ -224,8 +398,9 @@
         <div class="row">
             <div class="col-md-12">
                 <!--TABLA DE LOS USUARIOS-->
-                <table id="userTable" class="easyui-datagrid" title="Gestion de usuarios" style="width:100%;height:900px"
-                    data-options="singleSelect:true,collapsible:true" toolbar="#toolbar">
+                <table id="userTable" class="easyui-datagrid" title="Gestion de usuarios"
+                    style="width:100%;height:800px" data-options="singleSelect:true,collapsible:true"
+                    toolbar="#toolbar">
                     <thead>
                         <tr>
                             <th data-options="field:'id',width:50,hidden:true">ID</th>
@@ -234,20 +409,24 @@
                             <th data-options="field:'user_type',width:150">Tipo Usuario</th>
                             <th data-options="field:'creation_date',width:175">Fecha de alta</th>
                             <th data-options="field:'created_by',width:200">Alta por</th>
-                            <th data-options="field:'update_date',width:175">Fecha actualizo</th>
+                            <th data-options="field:'update_date',width:165">Fecha actualizo</th>
                             <th data-options="field:'updated_by',width:200">Actualizado por</th>
                         </tr>
                     </thead>
                 </table>
                 <!-- Botones de la tabla -->
                 <div id="toolbar">
-                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newUser()">Nuevo Usuario</a>
-                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
-                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="deleteUser()" id="bajaButton" disabled>Baja Usuario</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
+                        onclick="newUser()">Nuevo Usuario</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true"
+                        onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
+                        onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
                 </div>
 
                 <!--MODAL-->
-                <div id="userDialog" class="easyui-dialog" title="Crear Usuario" style="width:400px;height:514px;padding:10px" closed="true" buttons="#dlg-buttons">
+                <div id="userDialog" class="easyui-dialog" title="Crear Usuario"
+                    style="width:400px;height:514px;padding:10px" closed="true" buttons="#dlg-buttons">
                     <form id="userForm" method="post">
                         <div class="form-group py-3">
                             <label for="userType">Tipo de Usuario:</label>
@@ -258,12 +437,14 @@
                         </div>
                         <div class="form-group py-3">
                             <label for="username" id="label_nombre">Nombre:</label>
-                            <input id="username" name="username" type="text" class="form-control" onchange="consultarNombre()" required="true">
+                            <input id="username" name="username" type="text" class="form-control"
+                                onchange="consultarNombre()" required="true">
                         </div>
                         <div class="form-group py-3">
                             <label for="password">Contraseña:</label>
                             <div class="input-group">
-                                <input id="password" name="password" type="password" class="form-control" required="true">
+                                <input id="password" name="password" type="password" class="form-control"
+                                    required="true">
                                 <div class="input-group-append">
                                     <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
                                         <i class="bi bi-eye-slash"></i>
@@ -274,7 +455,8 @@
                         <div class="form-group py-3">
                             <label for="confirmPassword">Verificar Contraseña:</label>
                             <div class="input-group">
-                                <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" required="true">
+                                <input id="confirmPassword" name="confirmPassword" type="password" class="form-control"
+                                    required="true">
                                 <div class="input-group-append">
                                     <span class="input-group-text" id="toggleConfirmPassword" style="cursor: pointer;">
                                         <i class="bi bi-eye-slash"></i>
@@ -288,9 +470,12 @@
 
                 <!-- Botones del modal -->
                 <div id="dlg-buttons">
-                    <button type="button" class="btn btn-success" id="crearUsuario" onclick="submitForm()">Crear</button>
-                    <button type="button" class="btn btn-warning" id="editarUsuario" onclick="submitForm()">Editar</button>
-                    <button type="button" class="btn btn-danger" onclick="$('#userDialog').dialog('close')">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="crearUsuario"
+                        onclick="submitForm()">Crear</button>
+                    <button type="button" class="btn btn-warning" id="editarUsuario"
+                        onclick="updateForm()">Editar</button>
+                    <button type="button" class="btn btn-danger"
+                        onclick="$('#userDialog').dialog('close')">Cancelar</button>
                 </div>
             </div>
         </div>
