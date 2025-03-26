@@ -1,0 +1,14 @@
+{
+    "require": {
+        "setasign/fpdi": "^2.6",
+        "setasign/fpdf": "^1.8",
+        "tecnickcom/tcpdf": "^6.8",
+        "moment/moment": "^2.30"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "oomphinc/composer-installers-extender": true
+        }
+    }
+}

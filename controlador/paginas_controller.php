@@ -42,7 +42,9 @@ class paginas_controller
 
         include_once('vistas/logeado/header_inicio.php');
         include_once('vistas/logeado/index.php');
+        include_once('vistas/logeado/footer.php');
     }
+
     function gestion_usuarios()
     {
         // Verificar si la sesión no está activa, redirigir al login
@@ -53,6 +55,33 @@ class paginas_controller
 
         include_once('vistas/logeado/header_inicio.php');
         include_once('vistas/logeado/gestion_usuarios.php');
+        include_once('vistas/logeado/footer.php');
+    }
+
+    function solicitud_vacaciones()
+    {
+        // Verificar si la sesión no está activa, redirigir al login
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: index.php?c=paginas&m=login');
+            exit();
+        }
+
+        include_once('vistas/logeado/header_inicio.php');
+        include_once('vistas/logeado/solicitud_vacaciones.php');
+        include_once('vistas/logeado/footer.php');
+    }
+
+    function gestion_empleados()
+    {
+        // Verificar si la sesión no está activa, redirigir al login
+        if (!isset($_SESSION['usuario'])) {
+            header('Location: index.php?c=paginas&m=login');
+            exit();
+        }
+
+        include_once('vistas/logeado/header_inicio.php');
+        include_once('vistas/logeado/gestion_empleados.php');
+        include_once('vistas/logeado/footer.php');
     }
 
     function logout()

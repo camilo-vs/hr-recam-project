@@ -140,12 +140,12 @@
             <a class="nav-link" href="index.php?c=paginas&m=gestion_usuarios">Gestionar Usuaios</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link disabled" aria-disabled="true">Gestionar Empleados</a>
+            <a class="nav-link" href="index.php?c=paginas&m=gestion_empleados">Gestionar Empleados</a>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">Generar Contancias</a>
+            <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Generar Contancias</button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">Vacaciones</a></li>
+              <li><a class="dropdown-item" href="index.php?c=paginas&m=solicitud_vacaciones">Vacaciones</a></li>
               <li><a class="dropdown-item" href="#">Salida</a></li>
               <li><a class="dropdown-item" href="#">Ingreso</a></li>
             </ul>
