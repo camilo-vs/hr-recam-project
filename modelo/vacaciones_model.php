@@ -9,6 +9,23 @@ class vacaciones__model
         $this->db = Conectar::conexion();
         mysqli_set_charset($this->db, 'utf8');
     }
+
+
+    public function consultarTotalDias($employee_number)
+    {
+        mysqli_select_db($this->db, "hr_system");
+
+        $sql = "SELECT SUM(days) AS total_dias FROM vacation_requests WHERE state = 2 AND employee_number = " . intval($employee_number);
+        $result = mysqli_query($this->db, $sql);
+
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            return $row['total_dias'] ?? 0; // Si es NULL, devuelve 0
+        } else {
+            return 0; // Si hay error en la consulta, devuelve 0
+        }
+    }
+
     
     public function consultarSolicitudes($employee_number)
     {
@@ -39,17 +56,18 @@ class vacaciones__model
         
 
         $sql .= "ORDER BY vr.request_date DESC";
+        
 
         $result = mysqli_query($this->db, $sql);
 
         if ($result) {
             $requests = array();
-
+            $consultarTotalDias = $this->consultarTotalDias($employee_number);
             while ($row = mysqli_fetch_assoc($result)) {
                 $requests[] = $row;
             }
-
             $respuesta = array(
+                'count' => $consultarTotalDias,
                 'error' => false,
                 'msg' => 'Se encontraron las solicitudes de vacaciones',
                 'sql' => $sql,

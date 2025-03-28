@@ -7,6 +7,14 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'setasign\\Fpdi\\' => array($vendorDir . '/setasign/fpdi/src'),
+    'Symfony\\Component\\Process\\' => array($vendorDir . '/symfony/process'),
+    'Svg\\' => array($vendorDir . '/dompdf/php-svg-lib/src/Svg'),
+    'Sabberworm\\CSS\\' => array($vendorDir . '/sabberworm/php-css-parser/src'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/src'),
     'OomphInc\\ComposerInstallersExtender\\' => array($vendorDir . '/oomphinc/composer-installers-extender/src'),
+    'Masterminds\\' => array($vendorDir . '/masterminds/html5/src'),
+    'Knp\\Snappy\\' => array($vendorDir . '/knplabs/knp-snappy/src/Knp/Snappy'),
+    'FontLib\\' => array($vendorDir . '/dompdf/php-font-lib/src/FontLib'),
+    'Dompdf\\' => array($vendorDir . '/dompdf/dompdf/src'),
     'Composer\\Installers\\' => array($vendorDir . '/composer/installers/src/Composer/Installers'),
 );

@@ -3,6 +3,16 @@
 <script>
     //Funcionalidad al cargar la pagina
     $(document).ready(function() {
+        $('#editDateF').on('change', function() {
+            $('#editDateF_hidden').val($(this).val());
+        });
+
+        $('#editDateL').on('change', function() {
+            $('#editDateL_hidden').val($(this).val());
+        });
+        // O al cargar la información, asegurarte de que el campo hidden tenga el mismo valor.
+
+        $('#editDateC, #editDays, #editTurno').on('change', calculateEndDate);
         $('#userTable2').datagrid({
             singleSelect: true,
             onSelect: function(index, row) {
@@ -28,7 +38,6 @@
                 $('input[name="labelDays"]').prop("disabled", true);
                 $('input[name="labelDateR"]').prop("disabled", true);
                 $('input[name="labelDateC"]').prop("disabled", true);
-                $('input[name="labelDateF"]').prop("disabled", true);
                 $('select[name="labelTurno"]').prop("disabled", true);
                 $('#editarUsuario').prop("hidden", true);
                 $('#genButton').attr('hidden', true)
@@ -36,19 +45,59 @@
         });
 
         $('#genButton').on('click', function() {
-        // Recoger todos los datos
-        var requestId = $('input[name="labelRV"]').val();
-        var nombre_empleado = $('input[name="labelName"]').val();
-        var fecha_solicitud = $('input[name="labelDateR"]').val();
-        var no_empleado = $('input[name="labelEmployeeNumberId"]').val();
-        var departamento = $('input[name="labelDepartment"]').val();
-        var fecha_ingreso = $('input[name="labelHireDate"]').val();
-        var turno = $('input[name="labelTurno"]').val();
-        var dias_solicitados = $('input[name="labelDays"]').val();
-        var fecha_desde = $('input[name="labelDateC"]').val();
-        var fecha_hasta = $('input[name="labelDateF"]').val();
+            // Recoger todos los datos
+            var datos = {
+                id: $('input[name="labelRV"]').val(),
+                nombre_empleado: $('input[name="labelName"]').val(),
+                fecha_solicitud: $('input[name="labelDateR"]').val(),
+                no_empleado: $('input[name="labelEmployeeNumberId"]').val(),
+                departamento: $('input[name="labelDepartment"]').val(),
+                fecha_ingreso: $('input[name="labelHireDate"]').val(),
+                dias_solicitados: $('input[name="labelDays"]').val(),
+                fecha_desde: $('input[name="labelDateC"]').val(),
+                fecha_hasta: $('input[name="labelDateF"]').val(),
+                dias_disponibles: $('input[name="labelVacationDaysIn"]').val(),
+                fecha_regreso: $('input[name="labelDateL"]').val(),
+                tiempo_servicio: calcularTiempoServicio($('input[name="labelHireDate"]').val()),
+                dias_corresponden: calcularDiasCorrespondientes($('input[name="labelHireDate"]').val())
+            };
 
-        // Calcular tiempo de servicio
+            console.log(datos);
+
+            // Validar que todos los campos estén llenos
+            var camposVacios = Object.keys(datos).filter(key => !datos[key]);
+            if (camposVacios.length > 0) {
+                alert('Por favor, complete todos los campos antes de generar el PDF');
+                return;
+            }
+
+            // Enviar datos por POST
+            $.ajax({
+                url: 'index.php?c=pdf&m=generarPDF',
+                method: 'POST',
+                data: datos,
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(response) {
+                    // Crear un enlace temporal para descargar el PDF
+                    var blob = new Blob([response], {type: 'application/pdf'});
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'solicitud_vacaciones.pdf';
+                    link.click();
+                },
+                error: function(xhr, status, error) {
+                    // Ocultar loader
+                    ocultarLoader();
+
+                    console.error('Error generando PDF:', error);
+                    alert('Hubo un error al generar el PDF');
+                }
+            });
+        });
+
+        // Funciones de cálculo
         function calcularTiempoServicio(fechaIngreso) {
             var fechaInicio = moment(fechaIngreso, 'DD/MM/YYYY');
             var fechaActual = moment();
@@ -59,7 +108,6 @@
             return `${años} años ${meses} meses`;
         }
 
-        // Calcular días correspondientes
         function calcularDiasCorrespondientes(fechaIngreso) {
             var fechaInicio = moment(fechaIngreso, 'DD/MM/YYYY');
             var fechaActual = moment();
@@ -72,121 +120,66 @@
             return diasCorrespondientes;
         }
 
-        // Ajustar fecha si es sábado (si el turno es vespertino)
-        function ajustarFechaSiSabado(fecha) {
-            if (turno === '1') { // Turno vespertino
-                var fechaMomento = moment(fecha, 'DD/MM/YYYY');
-                
-                // Si es sábado, mover al lunes siguiente
-                if (fechaMomento.day() === 6) {
-                    fechaMomento.add(2, 'days');
-                }
-                
-                return fechaMomento.format('DD/MM/YYYY');
-            }
-            return fecha;
-        }
-
-        // Calcular días disponibles (restando días ya tomados)
-        function calcularDiasDisponibles(no_empleado, diasCorrespondientes) {
-            // NOTA: Necesitarás implementar la lógica de consulta a la base de datos
-            // Esto es un placeholder que deberás reemplazar con una llamada AJAX
-            var diasTomados = 0;
-            
-            $.ajax({
-                url: 'index.php?c=vacaciones&m=getDiasTomados',
-                method: 'POST',
-                data: { 
-                    empleado: no_empleado 
-                },
-                async: false, // No recomendado, pero necesario para este ejemplo
-                success: function(response) {
-                    diasTomados = parseInt(response);
-                }
-            });
-
-            return diasCorrespondientes - diasTomados;
-        }
-
-        // Calcular valores
-        var tiempo_servicio = calcularTiempoServicio(fecha_ingreso);
-        var dias_corresponden = calcularDiasCorrespondientes(fecha_ingreso);
-        var dias_disponibles = calcularDiasDisponibles(no_empleado, dias_corresponden);
-        
-        // Ajustar fechas si es necesario
-        fecha_desde = ajustarFechaSiSabado(fecha_desde);
-        fecha_hasta = ajustarFechaSiSabado(fecha_hasta);
-
-        // Construir URL con parámetros
-        var url = 'index.php?c=pdf&m=generarPDF&' + 
-            'id=' + encodeURIComponent(requestId) +
-            '&nombre_empleado=' + encodeURIComponent(nombre_empleado) +
-            '&fecha_solicitud=' + encodeURIComponent(fecha_solicitud) +
-            '&no_empleado=' + encodeURIComponent(no_empleado) +
-            '&departamento=' + encodeURIComponent(departamento) +
-            '&tiempo_servicio=' + encodeURIComponent(tiempo_servicio) +
-            '&fecha_ingreso=' + encodeURIComponent(fecha_ingreso) +
-            '&dias_disponibles=' + encodeURIComponent(dias_disponibles) +
-            '&dias_corresponden=' + encodeURIComponent(dias_corresponden) +
-            '&dias_solicitados=' + encodeURIComponent(dias_solicitados) +
-            '&fecha_desde=' + encodeURIComponent(fecha_desde) +
-            '&fecha_hasta=' + encodeURIComponent(fecha_hasta);
-
-        // Abrir en nueva ventana
-        window.open(url, '_blank');
-        });
-
         $('#userTable').datagrid({
             onSelect: function(index, row) {
                 // Filtrar la segunda tabla (userTable2) mostrando solo los registros con el mismo employee_number
                 var employee_number = row.employee_number_id;
+                let diasSolicitados;
                 $.ajax({
-                url: 'index.php?c=vacaciones&m=consultarSolicitudes',
-                type: 'GET',
-                dataType: 'json',
-                data: { employee_number: employee_number },
-                cache: false,
-                success: function(respuesta) {
-                    if (respuesta.error === true) {
-                        $.messager.alert('Error', respuesta.msg, 'error');
-                    } else {
-                        $('#userTable2').datagrid('loadData', respuesta.registros);
-                    }
-                }
-            });
+                    url: 'index.php?c=vacaciones&m=consultarSolicitudes',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: { employee_number: employee_number },
+                    cache: false,
+                    success: function(respuesta) {
+                        if (respuesta.error === true) {
+                            $.messager.alert('Error', respuesta.msg, 'error');
+                        } else {
+                            $('#userTable2').datagrid('loadData', respuesta.registros);
+                            diasSolicitados=respuesta.count;
+                            let fechaStr = row.hire_date;
+                            let [fecha, hora] = fechaStr.split(" ");
+                            let [dia, mes, anio] = fecha.split("/");
+                            let fechaISO = `${anio}-${mes}-${dia}T${hora}`;
+                            let fechaInicial = new Date(fechaISO);
 
+                            let fechaActual = new Date(); // Fecha de hoy
+
+                            // Normalizar ambas fechas al inicio del día (00:00:00)
+                            fechaInicial.setHours(0, 0, 0, 0);
+                            fechaActual.setHours(0, 0, 0, 0);
+
+                            // Calcular la diferencia en años
+                            let diferenciaAnios = fechaActual.getFullYear() - fechaInicial.getFullYear();
+
+                            // Ajustar si aún no ha pasado la fecha exacta en el año actual
+                            if (
+                                fechaActual.getMonth() < fechaInicial.getMonth() ||
+                                (fechaActual.getMonth() === fechaInicial.getMonth() && fechaActual.getDate() < fechaInicial.getDate())
+                            ) {
+                                diferenciaAnios--;
+                            }
+
+                            // Calcular días de vacaciones
+                            let diasVacaciones = diferenciaAnios >= 1 ? 14 + (diferenciaAnios - 1) * 2 : 0;
+
+                            // Calcular los días disponibles después de restar los días solicitados
+                            let diasDisponibles = diasVacaciones - diasSolicitados;
+
+                            // Mostrar los días disponibles en la etiqueta correspondiente
+                            $('h3[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días disponibles");
+                            $('input[name="labelVacationDaysIn"]').val(diasDisponibles);
+
+                            $('#divVacTable').prop('hidden', diasVacaciones <= 0);
+                            $('#solicitarVac').prop('hidden', diasVacaciones <= 0);
+                            $('#editFormVac').prop('hidden', diasVacaciones <= 0);
+                        }
+                    }
+                });
 
                 // Obtener la fecha de contratación de la fila seleccionada
                 // Obtener la fecha de contratación en formato DD/MM/YYYY HH:MM:SS
-                let fechaStr = row.hire_date;
-                let [fecha, hora] = fechaStr.split(" ");
-                let [dia, mes, anio] = fecha.split("/");
-                let fechaISO = `${anio}-${mes}-${dia}T${hora}`;
-                let fechaInicial = new Date(fechaISO);
-
-                let fechaActual = new Date(); // Fecha de hoy
-
-                // Normalizar ambas fechas al inicio del día (00:00:00)
-                fechaInicial.setHours(0, 0, 0, 0);
-                fechaActual.setHours(0, 0, 0, 0);
-
-                // Calcular la diferencia en años
-                let diferenciaAnios = fechaActual.getFullYear() - fechaInicial.getFullYear();
-
-                // Ajustar si aún no ha pasado la fecha exacta en el año actual
-                if (
-                    fechaActual.getMonth() < fechaInicial.getMonth() ||
-                    (fechaActual.getMonth() === fechaInicial.getMonth() && fechaActual.getDate() < fechaInicial.getDate())
-                ) {
-                    diferenciaAnios--;
-                }
-
-                // Calcular días de vacaciones
-                let diasVacaciones = diferenciaAnios >= 1 ? 14 + (diferenciaAnios - 1) * 2 : 0;
-
-                // Mostrar en el HTML
-                $('h3[name="vacationDays"]').text(diasVacaciones > 0 ? `${diasVacaciones} días` : "");
-
+                
                 $('input[name="labelEmployeeNumberId"]').val(row.employee_number_id);
                 $('input[name="labelName"]').val(row.name);
                 $('input[name="labelHireDate"]').val(row.hire_date);
@@ -194,17 +187,19 @@
                 $('select[name="labelRole"]').val(row.role_wname);
                 $('input[name="labelDepartment"]').val(row.department);
                 $('input[name="labelSupervisor"]').val(row.supervisor);
-                $('#divVacTable').prop('hidden', diasVacaciones <= 0);
-                $('#titleVac').prop('hidden', diasVacaciones <= 0);
-                $('#solicitarVac').prop('hidden', diasVacaciones <= 0);
-                $('#editFormVac').prop('hidden', diasVacaciones <= 0);
             },
             onUnselect: function(index, row) {
+                $('h3[name="vacationDays"]').text("");
                 $('input[name="labelDays"]').prop("disabled", true);
                 $('input[name="labelDateR"]').prop("disabled", true);
                 $('input[name="labelDateC"]').prop("disabled", true);
-                $('input[name="labelDateF"]').prop("disabled", true);
                 $('select[name="labelTurno"]').prop("disabled", true);
+                $('input[name="labelRV"]').val('');
+                $('input[name="labelDays"]').val('');
+                $('input[name="labelDateR"]').val('');
+                $('input[name="labelDateC"]').val('');
+                $('input[name="labelDateF"]').val('');
+                $('select[name="labelTurno"]').prop('');
                 $('#editarUsuario').prop("hidden", true);
                 $('#genButton').attr('hidden', true)
                 $('#divVacTable').prop('hidden');
@@ -230,7 +225,6 @@
                 } else {
                     $('#userTable').datagrid('loadData', respuesta.registros);
                     $('#divVacTable').attr('hidden', true);
-                    $('#titleVac').attr('hidden', true);
                     $('#solicitarVac').attr('hidden', true);
                     $('#editButton').attr('hidden', true);
 
@@ -263,11 +257,65 @@
         });
     });
 
+    function calculateEndDate() {
+        let startDateInput = $('#editDateC');
+        let daysInput = $('#editDays');
+        let endDateInput = $('#editDateF');
+        let backDateInput = $('#editDateL');
+        let turnoInput = $('#editTurno');
+
+        let startDate = moment(startDateInput.val(), 'YYYY-MM-DD');
+        let days = parseInt(daysInput.val());
+        let turno = turnoInput.val();
+
+        if (!startDate.isValid() || isNaN(days)) {
+            return; 
+        }
+
+        // Function to check if a date is a working day (Monday to Saturday)
+        function isWorkingDay(date) {
+            return date.day() !== 0; // 0 is Sunday
+        }
+
+        // Calculate end date precisely, counting the start date as day 1
+        function calculatePreciseEndDate(startDate, totalWorkingDays) {
+            let currentDate = moment(startDate);
+            let workingDaysCount = 1; // Start counting from the first day
+
+            while (workingDaysCount < totalWorkingDays) {
+                currentDate.add(1, 'days');
+                if (isWorkingDay(currentDate)) {
+                    workingDaysCount++;
+                }
+            }
+
+            return currentDate;
+        }
+
+        // Calculate end date
+        let endDate = calculatePreciseEndDate(startDate, days);
+        endDateInput.val(endDate.format('YYYY-MM-DD'));
+
+        // Calculate back to work date
+        let backDate = moment(endDate).add(1, 'days');
+        
+        // Adjust back to work date
+        while (!isWorkingDay(backDate)) {
+            backDate.add(1, 'days');
+        }
+
+        // Special rule: if back date is Saturday and turno is vespertino, move to Monday
+        if (turno === '1' && backDate.day() === 6) {
+            backDate.add(2, 'days'); // Move to Monday
+        }
+
+        backDateInput.val(backDate.format('YYYY-MM-DD'));
+    }
+
     function editUser() {
         $('input[name="labelDays"]').prop("disabled", false);
         $('input[name="labelDateR"]').prop("disabled", false);
         $('input[name="labelDateC"]').prop("disabled", false);
-        $('input[name="labelDateF"]').prop("disabled", false);
         $('select[name="labelTurno"]').prop("disabled", false);
         $('#editarUsuario').prop("hidden", false);
         $('#genButton').attr('hidden', true)
@@ -338,7 +386,6 @@
                         $('input[name="labelDays"]').prop("disabled", true);
                         $('input[name="labelDateR"]').prop("disabled", true);
                         $('input[name="labelDateC"]').prop("disabled", true);
-                        $('input[name="labelDateF"]').prop("disabled", true);
                         $('select[name="labelTurno"]').prop("disabled", true);
                         $('#editarUsuario').prop("hidden", true);
                         $('#genButton').attr('hidden', false)
@@ -482,7 +529,7 @@
                             <div class="row mb-2">
                                 <div class="col-sm-4">
                                     <p class="mb-0">Fecha de ingreso:</p>
-                                    <input type="text" class="form-control" name="labelHireDate" readonly disabled>
+                                    <input type="text" class="form-control" id="editHireDate" name="labelHireDate" readonly disabled>
                                 </div>
                                 <div class="col-sm-3">
                                     <p class="mb-0">Genero:</p>
@@ -510,7 +557,7 @@
                                     <input type="text" class="form-control" id="editSupervisor" name="labelSupervisor" disabled>
                                 </div>
                                 <div class="col-sm-4 mb-4">
-                                    <p class="mb-0" id="titleVac" hidden>Días de vacaciones:</p>
+                                    <p class="mb-0" id="titleVac">Días de vacaciones:</p>
                                     <h3 name="vacationDays" class="mt-0"></h3>
                                 </div>
                                 <div class="col-sm-2 mt-4">
@@ -578,8 +625,13 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <p class="mb-0">Fecha de fin</p>
-                                    <input type="date" class="form-control w-75 mb-2" id="editDateF" name="labelDateF" disabled>
+                                    <input type="date" class="form-control w-75 mb-2" id="editDateF" name="labelDateF" readonly>
                                 </div>
+                                <div class="col-sm-6">
+                                    <p class="mb-0">Retoma labores:</p>
+                                    <input type="date" class="form-control w-75 mb-2" id="editDateL" name="labelDateL" readonly>
+                                </div>
+                                <input type="text" class="form-control w-75 mb-2" name="labelVacationDaysIn" id="vacationDaysIn" hidden>
                             </div>
                             <div class="row">
                                 <div class="col-sm-4">

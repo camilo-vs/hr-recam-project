@@ -11,9 +11,35 @@ class ComposerStaticInit394db9ff3e8bed461b3131f49f543b23
         array (
             'setasign\\Fpdi\\' => 14,
         ),
+        'S' => 
+        array (
+            'Symfony\\Component\\Process\\' => 26,
+            'Svg\\' => 4,
+            'Sabberworm\\CSS\\' => 15,
+        ),
+        'P' => 
+        array (
+            'Psr\\Log\\' => 8,
+        ),
         'O' => 
         array (
             'OomphInc\\ComposerInstallersExtender\\' => 36,
+        ),
+        'M' => 
+        array (
+            'Masterminds\\' => 12,
+        ),
+        'K' => 
+        array (
+            'Knp\\Snappy\\' => 11,
+        ),
+        'F' => 
+        array (
+            'FontLib\\' => 8,
+        ),
+        'D' => 
+        array (
+            'Dompdf\\' => 7,
         ),
         'C' => 
         array (
@@ -26,9 +52,41 @@ class ComposerStaticInit394db9ff3e8bed461b3131f49f543b23
         array (
             0 => __DIR__ . '/..' . '/setasign/fpdi/src',
         ),
+        'Symfony\\Component\\Process\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/process',
+        ),
+        'Svg\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/php-svg-lib/src/Svg',
+        ),
+        'Sabberworm\\CSS\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/src',
+        ),
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/src',
+        ),
         'OomphInc\\ComposerInstallersExtender\\' => 
         array (
             0 => __DIR__ . '/..' . '/oomphinc/composer-installers-extender/src',
+        ),
+        'Masterminds\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/masterminds/html5/src',
+        ),
+        'Knp\\Snappy\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/knplabs/knp-snappy/src/Knp/Snappy',
+        ),
+        'FontLib\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/php-font-lib/src/FontLib',
+        ),
+        'Dompdf\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/dompdf/src',
         ),
         'Composer\\Installers\\' => 
         array (
@@ -39,6 +97,7 @@ class ComposerStaticInit394db9ff3e8bed461b3131f49f543b23
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Datamatrix' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/datamatrix.php',
+        'Dompdf\\Cpdf' => __DIR__ . '/..' . '/dompdf/dompdf/lib/Cpdf.php',
         'FPDF' => __DIR__ . '/..' . '/setasign/fpdf/fpdf.php',
         'PDF417' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/pdf417.php',
         'QRcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/qrcode.php',

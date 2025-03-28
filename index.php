@@ -1,4 +1,7 @@
 <?php
+
+use App\Controllers\pdf_controller;
+
 require_once('base_de_datos/conexion.php');
 require_once('controlador/paginas_controller.php');
 require_once('controlador/login_controller.php');

@@ -91,7 +91,7 @@
         $('#crearUsuario').show();
         $('#userDialog').dialog('open').dialog('setTitle', 'Nuevo Usuario');
         $('#userForm').form('clear');
-        $('#employee_number_id').form('clear');
+        $('#employee_number_id').val('');
     }
 
     function editUser() {
