@@ -137,7 +137,7 @@
             <a class="nav-link active" aria-current="page" href="index.php?c=paginas&m=inicio">Inicio</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="index.php?c=paginas&m=gestion_usuarios">Gestionar Usuaios</a>
+            <a class="nav-link" href="index.php?c=paginas&m=gestion_usuarios" hidden>Gestionar Usuaios</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="index.php?c=paginas&m=gestion_empleados">Gestionar Empleados</a>

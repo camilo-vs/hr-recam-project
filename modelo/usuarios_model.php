@@ -237,6 +237,7 @@ class usuarios_model
 
         return json_encode($respuesta);
     }
+    
     public function consultarExistencia($nombre)
     {
         mysqli_select_db($this->db, "hr_system");

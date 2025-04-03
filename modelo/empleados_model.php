@@ -44,9 +44,7 @@ class empleados__model
     public function consultarDatosExtra($index)
     {
         mysqli_select_db($this->db, "hr_system");
-        // Escapar el índice para evitar inyección SQL
-        $indexEsc = mysqli_real_escape_string($this->db, $index);
-    
+
         // Consulta única con JOINs:
         $sql = "SELECT 
                     r.role_id,
@@ -56,7 +54,7 @@ class empleados__model
                 FROM roles r
                 INNER JOIN departments d ON r.department = d.department_id
                 LEFT JOIN employees s ON d.supervisor_number = s.employee_number_id
-                WHERE r.role_id = '$indexEsc'";
+                WHERE r.role_id = $index";
     
         $result = mysqli_query($this->db, $sql);
     
@@ -310,7 +308,7 @@ class empleados__model
         $condicion .= " AND employee_number_id LIKE '" . $employee_number_id . "'";
 
         $sql = "SELECT count(*) total FROM employees where 1=1 " . $condicion;
-
+ 
         $result = mysqli_query($this->db, $sql);
 
         if (!$result) {

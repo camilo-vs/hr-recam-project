@@ -3,8 +3,6 @@ namespace App\Controllers;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Knp\Snappy\Pdf;
-
 class pdf_controller {
     public function generarPDF() {
         // Recoger datos del POST
@@ -27,34 +25,35 @@ class pdf_controller {
             'fecha_regreso' => $datos['fecha_regreso'] ?? ''
         ];
 
-        // Comenzar captura de salida
+        // Capturar HTML de la plantilla
         ob_start();
-        
-        // Pasar datos a la plantilla
         extract($datosCompletos);
-        
-        // Incluir la plantilla HTML (asegúrate que la ruta sea correcta)
-        include __DIR__ . '/../vistas/pdf.php';
-        
+        include __DIR__ . '/../vistas/pdf.html';
         $html = ob_get_clean();
 
-        echo $html;
-        die();
+        // Guardar HTML en un archivo temporal
+        $htmlPath = __DIR__ . '/../vistas/temp.html';
+        file_put_contents($htmlPath, $html);
 
+        // Ruta de salida del PDF
+        $pdfPath = __DIR__ . '/../vistas/solicitud_vacaciones.pdf';
 
-        // Crea una instancia de Snappy PDF, especificando la ruta al ejecutable de wkhtmltopdf
-        $snappy = new \Knp\Snappy\Pdf("C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe");
+        // Ejecutar Puppeteer con Node.js para generar el PDF
+        $script = __DIR__ . '/../js/generate_pdf.js';
+        $command = "node \"$script\" \"$htmlPath\" \"$pdfPath\"";
+        exec($command, $output, $returnVar);
 
-        // Opciones adicionales (por ejemplo, habilitar el acceso a archivos locales si es necesario)
-        $snappy->setOption('enable-local-file-access', true);
+        // Verificar si el PDF se generó correctamente
+        if ($returnVar !== 0 || !file_exists($pdfPath)) {
+            die("Error al generar el PDF. Salida: " . implode("\n", $output));
+        }
 
-        // Configurar las cabeceras para PDF y forzar la descarga
+        // Enviar el PDF al navegador
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="solicitud_vacaciones.pdf"');
-
-        // Genera el PDF a partir del HTML y lo imprime
-        echo $snappy->getOutputFromHtml($html);
+        readfile($pdfPath);
         exit;
     }
 }
+
 ?>

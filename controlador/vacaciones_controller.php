@@ -18,12 +18,27 @@ class vacaciones_controller
         echo $this->model->consultarSolicitudes($employee_number);
     }
 
+    public function consultarSolicitudesSI()
+    {
+        // Capturamos el employee id (puede venir por GET o POST)
+        $employee_number = isset($_REQUEST['employee_number']) ? $_REQUEST['employee_number'] : '';
+        $type_request = isset($_REQUEST['type_request']) ? $_REQUEST['type_request'] : '';
+        echo $this->model->consultarSolicitudesSI($employee_number, $type_request);
+    }
+
 
     public function crearSolicitud()
     {
         $data['employee_number'] = $_POST['employee_number'];
 
         echo $this->model->crearSolicitud($data);
+    }
+
+    public function cambiarEstado()
+    {
+        $data['id'] = $_POST['id'];
+        $data['estado'] = $_POST['estado'];
+        echo $this->model->cambiarEstado($data);
     }
 
     public function editarSolicitud()
@@ -34,6 +49,7 @@ class vacaciones_controller
         // Usa el nombre correcto de los inputs
         $data['labelDateR'] = $_POST['labelDateR'];
         $data['labelDays']    = $_POST['labelDays'];
+        $data['labelDateL']   = $_POST['labelDateL'];
         $data['labelDateC']   = $_POST['labelDateC'];
         $data['labelDateF']   = $_POST['labelDateF'];
         $data['state']        = '1';

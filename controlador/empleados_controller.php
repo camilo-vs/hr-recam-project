@@ -24,7 +24,7 @@ class empleados_controller
 
     public function consultarDatosExtra()
     {
-        $index = isset($_POST['index']) ? $_POST['index'] : '';
+        $index = $_POST['index'];
         echo $this->model->consultarDatosExtra($index);
     }
 
