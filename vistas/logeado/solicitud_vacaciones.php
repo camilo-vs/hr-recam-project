@@ -3,6 +3,86 @@
 <script>
     //Funcionalidad al cargar la pagina
     $(document).ready(function() {
+        $('#ingresoTable').datagrid({
+            singleSelect: true,
+            onSelect: function(index, row) {
+                $('input[name="labelR"]').val(row.request_id);
+                $('input[name="labelDateRequest"]').val(convertToDateInputFormat(row.request_date));
+                $('input[name="labelDateRequired"]').val(convertToDateTimeLocal(row.required_date));
+                $('#editFormSI').prop('hidden', false);
+
+                if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
+                    $('#editButtonSal').attr('hidden', false);
+                    if (row.estado === 'PROCESO') {
+                        $('#genButtonSal').attr('hidden', false);
+                        $('#cambiarEstadoR').linkbutton('enable');
+                    } else {
+                        $('#cambiarEstadoR').linkbutton('disable');
+                    }
+                } else {
+                    $('#editButtonSal').attr('hidden', true);
+                    $('#cambiarEstadoR').linkbutton('disable');
+                }
+            },
+            onUnselect: function(index, row) {
+                if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
+                    $('#editButtonSal').attr('hidden', false);
+                    if (row.estado === 'PROCESO') {
+                        $('#genButtonSal').attr('hidden', false)
+                        $('#cambiarEstadoR').linkbutton('enable');
+                    }
+                } else {
+                    $('#editButtonSal').attr('hidden', true);
+                    $('#cambiarEstadoR').linkbutton('disable');
+                }
+
+                $('input[name="labelDateRequired"]').prop("disabled", true);
+                $('input[name="labelDateRequest"]').prop("disabled", true);
+                $('#editarSI').prop("hidden", true);
+                $('#genButton').attr('hidden', true)
+            }
+        });
+
+        $('#salidaTable').datagrid({
+            singleSelect: true,
+            onSelect: function(index, row) {
+                $('input[name="labelR"]').val(row.request_id);
+                $('input[name="labelDateRequest"]').val(convertToDateInputFormat(row.request_date));
+                $('input[name="labelDateRequired"]').val(convertToDateTimeLocal(row.required_date));
+                $('#editFormSI').prop('hidden', false);
+
+                if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
+                    $('#editButtonSal').attr('hidden', false);
+                    if (row.estado === 'PROCESO') {
+                        $('#genButtonSal').attr('hidden', false);
+                        $('#cambiarEstadoR').linkbutton('enable');
+                    } else {
+                        $('#cambiarEstadoR').linkbutton('disable');
+                    }
+                } else {
+                    $('#editButtonSal').attr('hidden', true);
+                    $('#cambiarEstadoR').linkbutton('disable');
+                }
+            },
+            onUnselect: function(index, row) {
+                if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
+                    $('#editButtonSal').attr('hidden', false);
+                    if (row.estado === 'PROCESO') {
+                        $('#genButtonSal').attr('hidden', false)
+                        $('#cambiarEstadoR').linkbutton('enable');
+                    }
+                } else {
+                    $('#editButtonSal').attr('hidden', true);
+                    $('#cambiarEstadoR').linkbutton('disable');
+                }
+
+                $('input[name="labelDateRequired"]').prop("disabled", true);
+                $('input[name="labelDateRequest"]').prop("disabled", true);
+                $('#editarSI').prop("hidden", true);
+                $('#genButton').attr('hidden', true)
+            }
+        });
+
         $('#userTable2').datagrid({
             singleSelect: true,
             onSelect: function(index, row) {
@@ -46,9 +126,9 @@
                 $('input[name="labelDateR"]').prop("disabled", true);
                 $('input[name="labelDateC"]').prop("disabled", true);
                 $('select[name="labelTurno"]').prop("disabled", true);
-                $('#editarUsuario').prop("hidden", true);
-                $('#editFormVac').prop('hidden', true);
-                $('#genButton').attr('hidden', true)
+                $('#editarSalida').prop("hidden", true);
+                $('#editFormSI').prop('hidden', true);
+                $('#genButtonSal').attr('hidden', true)
             }
         });
 
@@ -136,7 +216,8 @@
                 tabS(employee_number);
                 tabI(employee_number);
                 tabV(employee_number);
-                function tabV(employee_number){
+
+                function tabV(employee_number) {
                     let diasSolicitados;
                     $.ajax({
                         url: 'index.php?c=vacaciones&m=consultarSolicitudes',
@@ -191,48 +272,7 @@
                         }
                     });
                 }
-                
-                function tabS(employee_number){
-                    var type_request = 0;
-                    $.ajax({
-                        url: 'index.php?c=vacaciones&m=consultarSolicitudesSI',
-                        type: 'GET',
-                        dataType: 'json',
-                        data: {
-                            employee_number: employee_number,
-                            type_request: type_request
-                        },
-                        cache: false,
-                        success: function(respuesta) {
-                            if (respuesta.error === true) {
-                                $.messager.alert('Error', respuesta.msg, 'error');
-                            } else {
-                                $('#salidaTable').datagrid('loadData', respuesta.registros);
-                            }
-                        }
-                    });
-                }
 
-                function tabI(employee_number){
-                    var type_request = 1;
-                    $.ajax({
-                        url: 'index.php?c=vacaciones&m=consultarSolicitudesSI',
-                        type: 'GET',
-                        dataType: 'json',
-                        data: {
-                            employee_number: employee_number,
-                            type_request: type_request
-                        },
-                        cache: false,
-                        success: function(respuesta) {
-                            if (respuesta.error === true) {
-                                $.messager.alert('Error', respuesta.msg, 'error');
-                            } else {
-                                $('#ingresoTable').datagrid('loadData', respuesta.registros);
-                            }
-                        }
-                    });
-                }
                 // Obtener la fecha de contratación de la fila seleccionada
                 // Obtener la fecha de contratación en formato DD/MM/YYYY HH:MM:SS
 
@@ -265,6 +305,8 @@
                 $('#bajaButton').linkbutton('disable');
                 $('#editForm').prop('hidden', true);
                 $('#tt').prop('hidden', true);
+                $('#editFormSI').prop('hidden', true);
+
             }
         });
 
@@ -310,6 +352,104 @@
         });
     });
 
+    function tabV(employee_number) {
+        let diasSolicitados;
+        $.ajax({
+            url: 'index.php?c=vacaciones&m=consultarSolicitudes',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                employee_number: employee_number
+            },
+            cache: false,
+            success: function(respuesta) {
+                if (respuesta.error === true) {
+                    $.messager.alert('Error', respuesta.msg, 'error');
+                } else {
+                    $('#userTable2').datagrid('loadData', respuesta.registros);
+                    diasSolicitados = respuesta.count;
+                    let fechaStr = row.hire_date;
+                    let [fecha, hora] = fechaStr.split(" ");
+                    let [dia, mes, anio] = fecha.split("/");
+                    let fechaISO = `${anio}-${mes}-${dia}T${hora}`;
+                    let fechaInicial = new Date(fechaISO);
+
+                    let fechaActual = new Date(); // Fecha de hoy
+
+                    // Normalizar ambas fechas al inicio del día (00:00:00)
+                    fechaInicial.setHours(0, 0, 0, 0);
+                    fechaActual.setHours(0, 0, 0, 0);
+
+                    // Calcular la diferencia en años
+                    let diferenciaAnios = fechaActual.getFullYear() - fechaInicial.getFullYear();
+
+                    // Ajustar si aún no ha pasado la fecha exacta en el año actual
+                    if (
+                        fechaActual.getMonth() < fechaInicial.getMonth() ||
+                        (fechaActual.getMonth() === fechaInicial.getMonth() && fechaActual.getDate() < fechaInicial.getDate())
+                    ) {
+                        diferenciaAnios--;
+                    }
+
+                    // Calcular días de vacaciones
+                    let diasVacaciones = diferenciaAnios >= 1 ? 12 + (diferenciaAnios - 1) * 2 : 0;
+
+                    // Calcular los días disponibles después de restar los días solicitados
+                    let diasDisponibles = diasVacaciones - diasSolicitados;
+
+                    // Mostrar los días disponibles en la etiqueta correspondiente
+                    $('h3[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días disponibles");
+                    $('input[name="labelVacationDaysIn"]').val(diasDisponibles);
+
+                    $('#solicitarVac').prop('hidden', diasVacaciones <= 0);
+                    $('#tt ul li:contains("Vacaciones")').toggle(diasVacaciones > 0);
+                }
+            }
+        });
+    }
+
+    function tabS(employee_number) {
+        var type_request = 0;
+        $.ajax({
+            url: 'index.php?c=vacaciones&m=consultarSolicitudesSI',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                employee_number: employee_number,
+                type_request: type_request
+            },
+            cache: false,
+            success: function(respuesta) {
+                if (respuesta.error === true) {
+                    $.messager.alert('Error', respuesta.msg, 'error');
+                } else {
+                    $('#salidaTable').datagrid('loadData', respuesta.registros);
+                }
+            }
+        });
+    }
+
+    function tabI(employee_number) {
+        var type_request = 1;
+        $.ajax({
+            url: 'index.php?c=vacaciones&m=consultarSolicitudesSI',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                employee_number: employee_number,
+                type_request: type_request
+            },
+            cache: false,
+            success: function(respuesta) {
+                if (respuesta.error === true) {
+                    $.messager.alert('Error', respuesta.msg, 'error');
+                } else {
+                    $('#ingresoTable').datagrid('loadData', respuesta.registros);
+                }
+            }
+        });
+    }
+
     function newUser() {
         $('#crearUsuario').show();
         $('#editarUsuario').hide();
@@ -317,8 +457,17 @@
         $('#userForm').form('clear');
     }
 
+    function cambiarEstadoSI() {
+        $('#cambiarEstadoSButton').show();
+        $('#cambiarEstadoButton').hide();
+
+        $('#userDialogEstado').dialog('open').dialog('setTitle', 'Nuevo Usuario');
+        $('#userForm').form('clear');
+    }
+
     function cambiarEstado() {
         $('#cambiarEstadoButton').show();
+        $('#cambiarEstadoSButton').hide();
         $('#userDialogEstado').dialog('open').dialog('setTitle', 'Nuevo Usuario');
         $('#userForm').form('clear');
     }
@@ -361,6 +510,50 @@
                                     index2: index2,
                                     row: updatedData
                                 });
+                                $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
+                            } else {
+                                $.messager.alert('Error', respuesta.msg, 'error');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    function cambiarEstadoSIFunc() {
+        var row = $('#userTable').datagrid('getSelected');
+        var employee_number = row.employee_number_id;
+        var index2 = $('#editR').val();
+
+        var index = $('#estadoSelect').val();
+        if (index == '2') {
+            cambio = 'APROVADA';
+            estado = 2;
+        } else {
+            cambio = 'RECHAZADA';
+            estado = 3;
+        }
+        $.messager.confirm('Confirmación', 'Se cambiara el estado a ' + cambio + ' del usuario ' + row.name + ' ¿Está seguro?', function(r) {
+            if (r) {
+                $.ajax({
+                    url: 'index.php?c=vacaciones&m=cambiarEstadoSI',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        id: index2,
+                        estado: estado
+                    },
+                    cache: false,
+                    success: function(respuesta) {
+                        if (respuesta.error === true) {
+                            $.messager.alert('Error', respuesta.msg, 'error');
+                        } else {
+                            if (respuesta.cambio) {
+                                tabS(employee_number);
+                                tabI(employee_number);
+
+
                                 $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
                             } else {
                                 $.messager.alert('Error', respuesta.msg, 'error');
@@ -436,6 +629,13 @@
         $('#genButton').attr('hidden', true)
     }
 
+    function editSI() {
+        $('input[name="labelDateRequired"]').prop("disabled", false);
+        $('input[name="labelDateRequest"]').prop("disabled", false);
+        $('#editarSI').prop("hidden", false);
+        $('#genButton').attr('hidden', true)
+    }
+
     function convertToDateInputFormat(dateString) {
         if (!dateString) return ''; // Evita errores si el valor es null o vacío
 
@@ -447,6 +647,67 @@
         let year = dateParts[2];
 
         return `${year}-${month}-${day}`; // Formato YYYY-MM-DD
+    }
+
+    function convertToDateTimeLocal(dateStr) {
+        var date = new Date(dateStr);
+        // Verifica si la fecha es válida
+        if (isNaN(date.getTime())) {
+            return "";
+        }
+        var year = date.getFullYear();
+        var month = ("0" + (date.getMonth() + 1)).slice(-2);
+        var day = ("0" + date.getDate()).slice(-2);
+        var hours = ("0" + date.getHours()).slice(-2);
+        var minutes = ("0" + date.getMinutes()).slice(-2);
+        // Retorna en formato "yyyy-MM-ddThh:mm"
+        return year + "-" + month + "-" + day + "T" + hours + ":" + minutes;
+    }
+
+
+    function updateFormSI() {
+        var row = $('#userTable').datagrid('getSelected');
+        var employee_number = row.employee_number_id;
+
+        var index = $('#editR').val();
+
+        var userId = index;
+        var userData = {
+            id: userId,
+            labelDateRequired: $('#editDateRequired').val()
+        };
+
+        $.ajax({
+            url: 'index.php?c=vacaciones&m=editarSolicitudSI',
+            type: 'POST',
+            dataType: 'json',
+            data: userData,
+            cache: false,
+            success: function(respuesta) {
+                $.messager.progress('close');
+                if (respuesta.error === true) {
+                    $.messager.alert('Error', respuesta.msg, 'error');
+                } else {
+                    if (respuesta.cambio) {
+                        // Actualiza la fila en la tabla con los nuevos datos
+                        tabS(employee_number);
+                        tabI(employee_number);
+
+                        $('#userDialog').dialog('close');
+                        $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
+                        $('input[name="labelDateRequired"]').prop("disabled", true);
+                        $('input[name="labelDateRequest"]').prop("disabled", true);
+                        $('#editarSI').prop("hidden", true);
+                        $('#genButton').attr('hidden', true)
+                    } else {
+                        $.messager.alert('Error', respuesta.msg, 'error');
+                    }
+                }
+            },
+            error: function() {
+                $.messager.alert('Error', 'Hubo un problema al procesar la solicitud. Intenta nuevamente.', 'error');
+            }
+        });
     }
 
     function updateForm() {
@@ -518,6 +779,97 @@
             },
             error: function() {
                 $.messager.alert('Error', 'Hubo un problema al procesar la solicitud. Intenta nuevamente.', 'error');
+            }
+        });
+    }
+
+    function crearSolicitudI() {
+        var rows = $('#ingresoTable').datagrid('getRows');
+        var existeCreada = rows.some(row => row.estado === 'CREADA' || row.estado === 'PROCESO'); // Verificar si existe una fila con estado 'CREADA'
+        var type_request = 1;
+        if (existeCreada) {
+            $.messager.alert('Advertencia', 'Ya existe una solicitud en proceso. Debe finalizarla antes de crear otra.', 'warning');
+            return; // Detener la ejecución si ya hay una solicitud creada
+        }
+        $.messager.confirm('Confirmación', 'Se creara la solicitud de vacaciones para el empleado' + ' ¿Está seguro?', function(r) {
+            if (r) {
+                var employee_number = $('#editID').val();
+                $.messager.progress({
+                    title: 'Procesando...',
+                    msg: 'Por favor espere mientras se crea la solicitud.'
+                });
+                $.ajax({
+                    url: 'index.php?c=vacaciones&m=crearSolicitudSI',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        employee_number: employee_number,
+                        type_request: type_request
+                    },
+                    cache: false,
+                    success: function(respuesta) {
+                        $.messager.progress('close');
+                        if (respuesta.error === true) {
+                            $.messager.alert('Error', respuesta.msg, 'error');
+                        } else {
+                            if (respuesta.creado) {
+                                var row = $('#userTable').datagrid('getSelected');
+                                var employee_number = row.employee_number_id;
+                                tabS(employee_number);
+                                tabI(employee_number);
+                                
+                                $.messager.alert('Se realizo la petición', 'Se creo la nueva solicitud!', 'info');
+                            } else {
+                                $.messager.alert('Error', respuesta.msg, 'error');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    function crearSolicitudS() {
+        var rows = $('#salidaTable').datagrid('getRows');
+        var existeCreada = rows.some(row => row.estado === 'CREADA' || row.estado === 'PROCESO'); // Verificar si existe una fila con estado 'CREADA'
+        var type_request = 0;
+        if (existeCreada) {
+            $.messager.alert('Advertencia', 'Ya existe una solicitud en proceso. Debe finalizarla antes de crear otra.', 'warning');
+            return; // Detener la ejecución si ya hay una solicitud creada
+        }
+        $.messager.confirm('Confirmación', 'Se creara la solicitud de vacaciones para el empleado' + ' ¿Está seguro?', function(r) {
+            if (r) {
+                var employee_number = $('#editID').val();
+                $.messager.progress({
+                    title: 'Procesando...',
+                    msg: 'Por favor espere mientras se crea la solicitud.'
+                });
+                $.ajax({
+                    url: 'index.php?c=vacaciones&m=crearSolicitudSI',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        employee_number: employee_number,
+                        type_request: type_request
+                    },
+                    cache: false,
+                    success: function(respuesta) {
+                        $.messager.progress('close');
+                        if (respuesta.error === true) {
+                            $.messager.alert('Error', respuesta.msg, 'error');
+                        } else {
+                            if (respuesta.creado) {
+                                var row = $('#userTable').datagrid('getSelected');
+                                var employee_number = row.employee_number_id;
+                                tabS(employee_number);
+                                tabI(employee_number);
+                                $.messager.alert('Se realizo la petición', 'Se creo la nueva solicitud!', 'info');
+                            } else {
+                                $.messager.alert('Error', respuesta.msg, 'error');
+                            }
+                        }
+                    }
+                });
             }
         });
     }
@@ -596,99 +948,6 @@
         dg.datagrid('reload');
     });
 
-    $('#tt').tabs({
-        border: false,
-        onSelect: function(index) {
-            switch (index) {
-                case 2:
-                    var row = $('#userTable').datagrid('getSelected');
-                    var employee_number = row.employee_number_id;
-                    let diasSolicitados;
-                    $.ajax({
-                        url: 'index.php?c=vacaciones&m=consultarSolicitudes',
-                        type: 'GET',
-                        dataType: 'json',
-                        data: {
-                            employee_number: employee_number
-                        },
-                        cache: false,
-                        success: function(respuesta) {
-                            if (respuesta.error === true) {
-                                $.messager.alert('Error', respuesta.msg, 'error');
-                            } else {
-                                $('#userTable2').datagrid('loadData', respuesta.registros);
-                                diasSolicitados = respuesta.count;
-                                let fechaStr = row.hire_date;
-                                let [fecha, hora] = fechaStr.split(" ");
-                                let [dia, mes, anio] = fecha.split("/");
-                                let fechaISO = `${anio}-${mes}-${dia}T${hora}`;
-                                let fechaInicial = new Date(fechaISO);
-
-                                let fechaActual = new Date(); // Fecha de hoy
-
-                                // Normalizar ambas fechas al inicio del día (00:00:00)
-                                fechaInicial.setHours(0, 0, 0, 0);
-                                fechaActual.setHours(0, 0, 0, 0);
-
-                                // Calcular la diferencia en años
-                                let diferenciaAnios = fechaActual.getFullYear() - fechaInicial.getFullYear();
-
-                                // Ajustar si aún no ha pasado la fecha exacta en el año actual
-                                if (
-                                    fechaActual.getMonth() < fechaInicial.getMonth() ||
-                                    (fechaActual.getMonth() === fechaInicial.getMonth() && fechaActual.getDate() < fechaInicial.getDate())
-                                ) {
-                                    diferenciaAnios--;
-                                }
-
-                                // Calcular días de vacaciones
-                                let diasVacaciones = diferenciaAnios >= 1 ? 12 + (diferenciaAnios - 1) * 2 : 0;
-
-                                // Calcular los días disponibles después de restar los días solicitados
-                                let diasDisponibles = diasVacaciones - diasSolicitados;
-
-                                // Mostrar los días disponibles en la etiqueta correspondiente
-                                $('h3[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días disponibles");
-                                $('input[name="labelVacationDaysIn"]').val(diasDisponibles);
-
-                                $('#solicitarVac').prop('hidden', diasVacaciones <= 0);
-                                $('#tt ul li:contains("Vacaciones")').toggle(diasVacaciones > 0);
-                            }
-                        }
-                    });
-                    break;
-                case 1:
-                    var row = $('#userTable').datagrid('getSelected');
-                    var employee_number = row.employee_number_id;
-                    var type_request = 0;
-                    $.ajax({
-                        url: 'index.php?c=vacaciones&m=consultarSolicitudesSI',
-                        type: 'GET',
-                        dataType: 'json',
-                        data: {
-                            employee_number: employee_number,
-                            type_request: type_request
-                        },
-                        cache: false,
-                        success: function(respuesta) {
-                            if (respuesta.error === true) {
-                                $.messager.alert('Error', respuesta.msg, 'error');
-                            } else {
-                                $('#salidaTable').datagrid('loadData', respuesta.registros);
-                            }
-                        }
-                    });
-                    break;
-                case 0:
-
-                    break;
-                default:
-                    break;
-            }
-        }
-    });
-
-
     $(function() {
         var dg = $('#userTable2');
 
@@ -710,29 +969,83 @@
 
         // Refrescar las filas para aplicar los estilos
         dg.datagrid('reload');
+
+        var dg = $('#salidaTable');
+
+        // Definir el estilo dinámico en base a la columna 'estado'
+        var estadoCol = dg.datagrid('getColumnOption', 'estado');
+        estadoCol.styler = function(value, row, index) {
+            if (value === 'CREADA') {
+                return 'background-color: black; color: white; font-weight: bold;';
+            } else if (value === 'PROCESO') {
+                return 'background-color: orange; color: white; font-weight: bold;';
+            } else if (value === 'APROVADA') {
+                return 'background-color: green; color: white; font-weight: bold;';
+            } else if (value === 'RECHAZADA') {
+                return 'background-color: red; color: white; font-weight: bold;';
+            } else {
+                return '';
+            }
+        };
+
+        // Refrescar las filas para aplicar los estilos
+        dg.datagrid('reload');
+
+        var dg = $('#ingresoTable');
+
+        // Definir el estilo dinámico en base a la columna 'estado'
+        var estadoCol = dg.datagrid('getColumnOption', 'estado');
+        estadoCol.styler = function(value, row, index) {
+            if (value === 'CREADA') {
+                return 'background-color: black; color: white; font-weight: bold;';
+            } else if (value === 'PROCESO') {
+                return 'background-color: orange; color: white; font-weight: bold;';
+            } else if (value === 'APROVADA') {
+                return 'background-color: green; color: white; font-weight: bold;';
+            } else if (value === 'RECHAZADA') {
+                return 'background-color: red; color: white; font-weight: bold;';
+            } else {
+                return '';
+            }
+        };
+
+        // Refrescar las filas para aplicar los estilos
+        dg.datagrid('reload');
     });
 
-    function toggleVacaciones(diasVacaciones) {
-        var tabs = $('#tt'); // Seleccionamos el contenedor de pestañas
-        var tabVacaciones = tabs.tabs('getTab', 'Vacaciones'); // Buscamos la pestaña "Vacaciones"
-
-        if (tabVacaciones) { // Si la pestaña existe
-            var index = tabs.tabs('getTabIndex', tabVacaciones); // Obtener el índice de "Vacaciones"
-
-            // Si la pestaña "Vacaciones" está seleccionada y se va a ocultar, cambiamos a la primera pestaña
-            if (diasVacaciones <= 0) {
-                var selectedTab = tabs.tabs('getSelected'); // Obtener pestaña actual
-                var selectedIndex = tabs.tabs('getTabIndex', selectedTab); // Índice de la pestaña actual
-
-                if (selectedIndex === index) { // Si "Vacaciones" está seleccionada, cambiamos a la primera
-                    tabs.tabs('select', 0);
-                }
-
-                // Ocultar la pestaña "Vacaciones"
-                $('li a:contains("Vacaciones")').parent().hide();
-            } else {
-                // Mostrar la pestaña "Vacaciones"
-                $('li a:contains("Vacaciones")').parent().show();
+    function onTabSelect(title, index) {
+        var row = $('#userTable').datagrid('getSelected');
+        if (!row) {
+            return;
+        } else {
+            var employee_number = row.employee_number_id;
+            switch (index) {
+                case 0:
+                    tabS(employee_number);
+                    $('#editFormSI').prop('hidden', true);
+                    $('#editFormVac').prop('hidden', true);
+                    $('input[name="labelDateRequired"]').prop("disabled", true);
+                    $('input[name="labelDateRequest"]').prop("disabled", true);
+                    $('#genButton').attr('hidden', true)
+                    break;
+                case 1:
+                    tabI(employee_number);
+                    $('#editFormSI').prop('hidden', true);
+                    $('#editFormVac').prop('hidden', true);
+                    $('input[name="labelDateRequired"]').prop("disabled", true);
+                    $('input[name="labelDateRequest"]').prop("disabled", true);
+                    $('#genButton').attr('hidden', true)
+                    break;
+                case 3:
+                    tabV(employee_number);
+                    $('#editFormSI').prop('hidden', true);
+                    $('#editFormVac').prop('hidden', true);
+                    $('input[name="labelDateRequired"]').prop("disabled", true);
+                    $('input[name="labelDateRequest"]').prop("disabled", true);
+                    $('#genButton').attr('hidden', true)
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -809,7 +1122,7 @@
                     </form>
                 </div>
                 <div class="col-md-6">
-                    <div id="tt" class="easyui-tabs" style="width:100%;height:300px;" hidden>
+                    <div id="tt" class="easyui-tabs" style="width:100%;height:300px;" data-options="onSelect: onTabSelect" hidden>
                         <div id="TabSalida" title="Salida" style="display:none;">
                             <table id="salidaTable"
                                 class="easyui-datagrid"
@@ -818,24 +1131,20 @@
                                 toolbar="#toolbar1">
                                 <thead>
                                     <tr>
-                                        <th data-options="field:'request_vacation_id',width:50" hidden>#</th>
-                                        <th data-options="field:'back_date',width:50" hidden>#</th>
-                                        <th data-options="field:'start_date',width:50" hidden>#</th>
-                                        <th data-options="field:'finish_date',width:50" hidden>#</th>
-                                        <th data-options="field:'work_shift',width:50" hidden>#</th>
+                                        <th data-options="field:'request_id',width:50" hidden>#</th>
                                         <th data-options="field:'employee_number',width:50" hidden>#</th>
-                                        <th data-options="field:'employee_name',width:250">Nombre</th>
-                                        <th data-options="field:'estado',width:100">Estado</th>
-                                        <th data-options="field:'days',width:120">Dias solicitados</th>
+                                        <th data-options="field:'employee_name',width:220">Nombre</th>
+                                        <th data-options="field:'estado',width:70">Estado</th>
+                                        <th data-options="field:'required_date',width:150">Dia y hora solicitados</th>
                                         <th data-options="field:'request_date',width:150">Fecha de solicitud</th>
                                     </tr>
                                 </thead>
                             </table>
                             <div id="toolbar1">
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                                    onclick="crearSolicitud()" id="" hidden>Solicitar</a>
+                                    onclick="crearSolicitudS()" id="solicitar">Solicitar</a>
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
-                                    onclick="cambiarEstadoS()" id="" disabled>Cambiar Estado</a>
+                                    onclick="cambiarEstadoSI()" id="cambiarEstadoR" disabled>Cambiar Estado</a>
                             </div>
                         </div>
                         <div id="TabIngreso" title="Ingreso" style="display:none;">
@@ -846,24 +1155,20 @@
                                 toolbar="#toolbar2">
                                 <thead>
                                     <tr>
-                                        <th data-options="field:'request_vacation_id',width:50" hidden>#</th>
-                                        <th data-options="field:'back_date',width:50" hidden>#</th>
-                                        <th data-options="field:'start_date',width:50" hidden>#</th>
-                                        <th data-options="field:'finish_date',width:50" hidden>#</th>
-                                        <th data-options="field:'work_shift',width:50" hidden>#</th>
+                                        <th data-options="field:'request_id',width:50" hidden>#</th>
                                         <th data-options="field:'employee_number',width:50" hidden>#</th>
-                                        <th data-options="field:'employee_name',width:250">Nombre</th>
-                                        <th data-options="field:'estado',width:100">Estado</th>
-                                        <th data-options="field:'days',width:120">Dias solicitados</th>
+                                        <th data-options="field:'employee_name',width:220">Nombre</th>
+                                        <th data-options="field:'estado',width:70">Estado</th>
+                                        <th data-options="field:'required_date',width:150">Dia y hora solicitados</th>
                                         <th data-options="field:'request_date',width:150">Fecha de solicitud</th>
                                     </tr>
                                 </thead>
                             </table>
                             <div id="toolbar2">
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                                    onclick="crearSolicitud()" id="" hidden>Solicitar</a>
+                                    onclick="crearSolicitudI()" id="solicitar">Solicitar</a>
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
-                                    onclick="cambiarEstadoI()" id="" disabled>Cambiar Estado</a>
+                                    onclick="cambiarEstadoI()" id="cambiarEstadoR" disabled>Cambiar Estado</a>
                             </div>
                         </div>
                         <div id="tabVacaciones" title="Vacaciones" style="display:none;">
@@ -955,6 +1260,40 @@
                             </div>
                         </div>
                     </form>
+                    <form id="editFormSI" action="post" hidden>
+                        <div class="container" style="width: 600px;">
+                            <div class="row">
+                                <h4 class="col-sm-8">Detalles de la solicitud</h4>
+                                <a href="javascript:void(0)" class="easyui-linkbutton col-sm-3" iconCls="icon-edit" plain="true"
+                                    onclick="editSI()" id="editButtonSal">Editar solicitud</a>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4">
+                                    <p class="mb-0">Numero de solicitud</p>
+                                    <input type="text" class="form-control" name="labelR" id="editR" readonly disabled>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-6">
+                                    <p class="mb-0">Fecha y hora solicitados</p>
+                                    <input type="datetime-local" class="form-control w-75 mb-2" id="editDateRequired" name="labelDateRequired" onchange="calculateEndDate()" disabled>
+                                </div>
+                                <div class="col-sm-6">
+                                    <p class="mb-0">Fecha de solicitud</p>
+                                    <input type="date" class="form-control w-75 mb-2" id="editDateRequest" name="labelDateRequest" disabled>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <button type="button" class="btn btn-warning w-50 " id="editarSI"
+                                        onclick="updateFormSI()" hidden>Editar</button>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <button type="button" class="btn btn-warning" id="genButtonSI" hidden>Generar solicitud</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
                 <!--MODAL-->
@@ -974,6 +1313,8 @@
                 <div id="dlg-buttons">
                     <button type="button" class="btn btn-success" id="cambiarEstadoButton"
                         onclick="cambiarEstadoFunc()">Cambiar</button>
+                    <button type="button" class="btn btn-success" id="cambiarEstadoSButton"
+                        onclick="cambiarEstadoSIFunc()">Cambiar</button>
                     <button type="button" class="btn btn-danger"
                         onclick="$('#userDialogEstado').dialog('close')">Cancelar</button>
                 </div>

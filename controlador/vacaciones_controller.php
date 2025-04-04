@@ -34,11 +34,39 @@ class vacaciones_controller
         echo $this->model->crearSolicitud($data);
     }
 
+    public function crearSolicitudSI()
+    {
+        $data['employee_number'] = $_POST['employee_number'];
+        $data['type_request'] = $_POST['type_request'];
+
+        echo $this->model->crearSolicitudSI($data);
+    }
+
+    public function cambiarEstadoSI()
+    {
+        $data['id'] = $_POST['id'];
+        $data['estado'] = $_POST['estado'];
+        echo $this->model->cambiarEstadoSI($data);
+    }
+
     public function cambiarEstado()
     {
         $data['id'] = $_POST['id'];
         $data['estado'] = $_POST['estado'];
         echo $this->model->cambiarEstado($data);
+    }
+
+    public function editarSolicitudSI()
+    {
+        $data = array();
+        // Usa el nombre correcto del input para el id
+        $data['request_id'] = $_POST['id'];
+        // Usa el nombre correcto de los inputs
+        $data['labelDateRequired'] = $_POST['labelDateRequired'];
+        $data['state']        = '1';
+
+    
+        echo $this->model->editarSolicitudSI($data);
     }
 
     public function editarSolicitud()

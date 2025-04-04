@@ -28,7 +28,6 @@ class vacaciones__model
 
     public function cambiarEstado($data)
     {
-
         mysqli_select_db($this->db, "hr_system");
 
         if (!isset($_SESSION)) {
@@ -61,6 +60,42 @@ class vacaciones__model
             );
         }
 
+        return json_encode($respuesta);
+    }
+
+    public function cambiarEstadoSI($data)
+    {
+        mysqli_select_db($this->db, "hr_system");
+
+        if (!isset($_SESSION)) {
+            session_start();
+        }
+
+        $set = "state = '" . $data['estado'] . "'"; 
+        $condicion = "request_id = " . $data['id'];
+
+        $sqlUpdate = "UPDATE requests SET " . $set . " WHERE " . $condicion . "";
+
+        $resultUpdate = mysqli_query($this->db, $sqlUpdate);
+
+        if (!$resultUpdate) {
+            $respuesta = array(
+                'error' => true,
+                'msg' => 'Error al actualizar: ' . mysqli_error($this->db),
+                'sql' => $sqlUpdate,
+                'respuesta' => $resultUpdate
+            );
+        } else {
+            $respuesta = array(
+                'error' => false,
+                'msg' => 'Todo Bien',
+                'sql' => $sqlUpdate,
+                'respuesta' => $resultUpdate,
+                'cambio' => TRUE,
+                'datos' => $data,
+                'id_updated' => $_SESSION['usuario']
+            );
+        }
 
         return json_encode($respuesta);
     }
@@ -215,6 +250,46 @@ class vacaciones__model
         return json_encode($respuesta);
     }
 
+    public function crearSolicitudSI($data)
+    {
+        mysqli_select_db($this->db, "hr_system");
+    
+        if (!isset($_SESSION)) {
+            session_start();
+        }
+    
+        $employee_number = mysqli_real_escape_string($this->db, $data['employee_number']);
+        $type_request = mysqli_real_escape_string($this->db, $data['type_request']);
+    
+        $sql = "INSERT INTO requests (employee_number, type_request) VALUES ('$employee_number', '$type_request')";
+        
+        $result = mysqli_query($this->db, $sql);
+    
+        if (!$result) {
+    
+            $respuesta = array(
+                'error' => true,
+                'msg' => 'Error al insertar: ' . mysqli_error($this->db),
+                'sql' => $sql,
+                'resultado' => ''
+            );
+        } else {
+            $lastInsertId = mysqli_insert_id($this->db);
+            $respuesta = array(
+                'error' => false,
+                'msg' => 'Todo Bien',
+                'sql' => $sql,
+                'resultado' => $result,
+                'id' => $lastInsertId,
+                'datos' => $data,
+                'created_by' => $_SESSION['usuario'],
+                'creado' => true,
+            );
+        }
+    
+        return json_encode($respuesta);
+    }
+
     public function editarSolicitud($data)
     {
         mysqli_select_db($this->db, "hr_system");
@@ -237,6 +312,47 @@ class vacaciones__model
         $condicion = "request_vacation_id = " . $data['request_vacation_id'];
 
         $sqlUpdate = "UPDATE vacation_requests SET " . $set . " WHERE " . $condicion;
+        $resultUpdate = mysqli_query($this->db, $sqlUpdate);
+
+        if (!$resultUpdate) {
+            $respuesta = array(
+                'error' => true,
+                'msg' => 'Error al actualizar: ' . mysqli_error($this->db),
+                'sql' => $sqlUpdate,
+                'respuesta' => $resultUpdate
+            );
+        } else {
+            $respuesta = array(
+                'error' => false,
+                'msg' => 'Todo Bien',
+                'sql' => $sqlUpdate,
+                'respuesta' => $resultUpdate,
+                'cambio' => true,
+                'datos' => $data,
+                'id_updated' => $_SESSION['usuario']
+            );
+        }
+
+        return json_encode($respuesta);
+    }
+
+    public function editarSolicitudSI($data)
+    {
+        mysqli_select_db($this->db, "hr_system");
+
+        if (!isset($_SESSION)) {
+            session_start();
+        }
+
+        // Se arma la cadena SET con todos los campos a actualizar
+        $set = "";
+        $set .= "required_date = '" . $data['labelDateRequired'] . "', ";
+        $set .= "state = '" . $data['state'] . "'";
+
+        // Se utiliza employee_number_id (el id único del empleado) para identificar el registro a actualizar
+        $condicion = "request_id = " . $data['request_id'];
+
+        $sqlUpdate = "UPDATE requests SET " . $set . " WHERE " . $condicion;
         $resultUpdate = mysqli_query($this->db, $sqlUpdate);
 
         if (!$resultUpdate) {
