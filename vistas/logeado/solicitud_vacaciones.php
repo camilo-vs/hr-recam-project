@@ -13,12 +13,14 @@
 
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButtonSal').attr('hidden', false);
-                    if (row.estado === 'PROCESO') {
+                    if (row.estado != 'PROCESO') {
+                        $('#genButtonI').attr('hidden', true);
+                        $('#genButtonS').attr('hidden', false);
+                        $('#cambiarEstadoI').linkbutton('disabled');
+                    } else {
                         $('#genButtonI').attr('hidden', false);
                         $('#genButtonS').attr('hidden', true);
                         $('#cambiarEstadoI').linkbutton('enable');
-                    } else {
-                        $('#cambiarEstadoI').linkbutton('disable');
                     }
                 } else {
                     $('#editButtonSal').attr('hidden', true);
@@ -32,6 +34,10 @@
                         $('#genButtonI').attr('hidden', false);
                         $('#genButtonS').attr('hidden', true);
                         $('#cambiarEstadoI').linkbutton('enable');
+                    } else {
+                        $('#cambiarEstadoI').linkbutton('disable');
+                        $('#genButtonI').attr('hidden', true);
+                        $('#genButtonS').attr('hidden', true);
                     }
                 } else {
                     $('#editButtonSal').attr('hidden', true);
@@ -166,6 +172,11 @@
                 return;
             }
 
+            $.messager.progress({
+                    title: 'Procesando...',
+                    msg: 'Por favor espere mientras se crea el documento.'
+                });
+
             // Enviar datos por POST
             $.ajax({
                 url: 'index.php?c=pdf&m=generarPDF',
@@ -175,6 +186,8 @@
                     responseType: 'blob'
                 },
                 success: function(response) {
+                    $.messager.progress('close');
+
                     // Crear un enlace temporal para descargar el PDF
                     var blob = new Blob([response], {
                         type: 'application/pdf'
@@ -214,6 +227,11 @@
             }
 
             // Enviar datos por POST
+
+            $.messager.progress({
+                    title: 'Procesando...',
+                    msg: 'Por favor espere mientras se crea el documento.'
+                });
             $.ajax({
                 url: 'index.php?c=pdf&m=generarPDFS',
                 method: 'POST',
@@ -222,6 +240,7 @@
                     responseType: 'blob'
                 },
                 success: function(response) {
+                    $.messager.progress('close');
                     // Crear un enlace temporal para descargar el PDF
                     var blob = new Blob([response], {
                         type: 'application/pdf'
@@ -261,6 +280,11 @@
                 return;
             }
 
+            $.messager.progress({
+                    title: 'Procesando...',
+                    msg: 'Por favor espere mientras se crea el documento.'
+                });
+
             // Enviar datos por POST
             $.ajax({
                 url: 'index.php?c=pdf&m=generarPDFI',
@@ -270,6 +294,8 @@
                     responseType: 'blob'
                 },
                 success: function(response) {
+                    $.messager.progress('close');
+
                     // Crear un enlace temporal para descargar el PDF
                     var blob = new Blob([response], {
                         type: 'application/pdf'
@@ -391,7 +417,6 @@
                 $('input[name="labelSupervisor"]').val(row.supervisor);
                 $('#editForm').prop('hidden', false);
                 $('#tt').prop('hidden', false);
-
             },
             onUnselect: function(index, row) {
                 $('h3[name="vacationDays"]').text("");
@@ -615,7 +640,6 @@
                             if (respuesta.cambio) {
                                 var updatedData = {
                                     estado: cambio
-
                                 };
 
                                 $('#userTable2').datagrid('updateRow', {
@@ -666,7 +690,8 @@
                             if (respuesta.cambio) {
                                 tabS(employee_number);
                                 tabI(employee_number);
-
+                                
+                                $('#editFormSI').prop('hidden', true);
                                 $('#userDialogEstado').dialog('close');
                                 $('#cambiarEstadoI').linkbutton('disable');
                                 $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
@@ -814,8 +839,6 @@
                         $('input[name="labelDateRequired"]').prop("disabled", true);
                         $('input[name="labelDateRequest"]').prop("disabled", true);
                         $('#editarSI').prop("hidden", true);
-                        $('#genButton').attr('hidden', true);
-                        $('#editFormSI').prop('hidden', true );
 
                     } else {
                         $.messager.alert('Error', respuesta.msg, 'error');
@@ -1148,6 +1171,8 @@
                     $('input[name="labelDateRequired"]').prop("disabled", true);
                     $('input[name="labelDateRequest"]').prop("disabled", true);
                     $('#genButton').attr('hidden', true)
+                    $('#genButtonI').attr('hidden', true);
+                    $('#genButtonS').attr('hidden', true);
                     break;
                 case 1:
                     tabI(employee_number);
@@ -1156,6 +1181,8 @@
                     $('input[name="labelDateRequired"]').prop("disabled", true);
                     $('input[name="labelDateRequest"]').prop("disabled", true);
                     $('#genButton').attr('hidden', true)
+                    $('#genButtonI').attr('hidden', true);
+                    $('#genButtonS').attr('hidden', true);
                     break;
                 case 2:
                     tabV(employee_number);
@@ -1164,6 +1191,8 @@
                     $('input[name="labelDateRequired"]').prop("disabled", true);
                     $('input[name="labelDateRequest"]').prop("disabled", true);
                     $('#genButton').attr('hidden', true)
+                    $('#genButtonI').attr('hidden', true);
+                    $('#genButtonS').attr('hidden', true);
                     break;
                 default:
                     break;

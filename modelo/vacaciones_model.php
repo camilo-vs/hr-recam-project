@@ -129,7 +129,7 @@ class vacaciones__model
             $sql .= "WHERE vr.employee_number = " . intval($employee_number) . " ";
         
 
-        $sql .= "ORDER BY vr.request_date DESC";
+        $sql .= "ORDER BY vr.request_date ASC";
         
 
         $result = mysqli_query($this->db, $sql);
