@@ -83,7 +83,10 @@
                 $('input[name="labelDateRequired"]').prop("disabled", true);
                 $('input[name="labelDateRequest"]').prop("disabled", true);
                 $('#editarSI').prop("hidden", true);
-                $('#genButton').attr('hidden', true)
+                $('#genButton').attr('hidden', true);
+                $('#editSI').prop('hidden', true);
+                $('#genButtonS').attr('hidden', true);
+                $('#genButtonI').attr('hidden', true);
             }
         });
 
@@ -118,7 +121,7 @@
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButton').attr('hidden', false);
                     if (row.estado === 'PROCESO') {
-                        $('#genButton').attr('hidden', false)
+                        $('#genButton').attr('hidden', false);
                         $('#bajaButton').linkbutton('enable');
                     }
                 } else {
@@ -132,7 +135,9 @@
                 $('select[name="labelTurno"]').prop("disabled", true);
                 $('#editarSalida').prop("hidden", true);
                 $('#editFormSI').prop('hidden', true);
-                $('#genButtonSI').attr('hidden', true)
+                $('#editSI').prop('hidden', true);
+                $('#genButtonS').attr('hidden', true);
+                $('#genButtonI').attr('hidden', true);
             }
         });
 
@@ -407,6 +412,12 @@
                 $('#editForm').prop('hidden', true);
                 $('#tt').prop('hidden', true);
                 $('#editFormSI').prop('hidden', true);
+                $('#editarSI').prop('hidden', true);
+                $('#genButtonS').attr('hidden', true);
+                $('#genButtonI').attr('hidden', true);
+                $('input[name="labelDateRequired"]').prop("disabled", true);
+                $('input[name="labelDateRequest"]').prop("disabled", true);
+                $('#cambiarEstadoI').linkbutton('disable');
 
             }
         });
@@ -737,7 +748,8 @@
         $('input[name="labelDateRequired"]').prop("disabled", false);
         $('input[name="labelDateRequest"]').prop("disabled", false);
         $('#editarSI').prop("hidden", false);
-        $('#genButton').attr('hidden', true)
+        $('#genButtonS').attr('hidden', true)
+        $('#genButtonI').attr('hidden', true)
     }
 
     function convertToDateInputFormat(dateString) {
@@ -802,7 +814,9 @@
                         $('input[name="labelDateRequired"]').prop("disabled", true);
                         $('input[name="labelDateRequest"]').prop("disabled", true);
                         $('#editarSI').prop("hidden", true);
-                        $('#genButton').attr('hidden', true)
+                        $('#genButton').attr('hidden', true);
+                        $('#editFormSI').prop('hidden', true );
+
                     } else {
                         $.messager.alert('Error', respuesta.msg, 'error');
                     }

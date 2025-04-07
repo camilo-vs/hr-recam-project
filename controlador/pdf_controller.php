@@ -28,15 +28,16 @@ class pdf_controller {
         // Capturar HTML de la plantilla
         ob_start();
         extract($datosCompletos);
-        include __DIR__ . '/../vistas/pdf.html';
+        include __DIR__ . '/../vistas/PDF/pdf.html';
         $html = ob_get_clean();
 
         // Guardar HTML en un archivo temporal
-        $htmlPath = __DIR__ . '/../vistas/temp.html';
+        $htmlPath = __DIR__ . '/../vistas/PDF/tempPDF/temp.html';
         file_put_contents($htmlPath, $html);
 
         // Ruta de salida del PDF
-        $pdfPath = __DIR__ . '/../vistas/solicitud_vacaciones.pdf';
+        $pdfPath = __DIR__ . '/../vistas/PDF/generatedPDF/solicitud_vacaciones' . $datosCompletos['no_empleado'] . '-' . $datosCompletos['fecha_solicitud'] . '.pdf';
+
 
         // Ejecutar Puppeteer con Node.js para generar el PDF
         $script = __DIR__ . '/../js/generate_pdf.js';
@@ -71,15 +72,15 @@ class pdf_controller {
         // Capturar HTML de la plantilla
         ob_start();
         extract($datosCompletos);
-        include __DIR__ . '/../vistas/pdfI.html';
+        include __DIR__ . '/../vistas/PDF/pdfI.html';
         $html = ob_get_clean();
 
         // Guardar HTML en un archivo temporal
-        $htmlPath = __DIR__ . '/../vistas/tempI.html';
+        $htmlPath = __DIR__ . '/../vistas/PDF/tempPDF/tempI.html';
         file_put_contents($htmlPath, $html);
 
         // Ruta de salida del PDF
-        $pdfPath = __DIR__ . '/../vistas/solicitud_I.pdf';
+        $pdfPath = __DIR__ . '/../vistas/PDF/generatedPDF/solicitud_I_' . $datosCompletos['no_empleado'] . '-' . $datosCompletos['fecha_solicitud'] . '.pdf';
 
         // Ejecutar Puppeteer con Node.js para generar el PDF
         $script = __DIR__ . '/../js/generate_pdf.js';
@@ -114,15 +115,15 @@ class pdf_controller {
         // Capturar HTML de la plantilla
         ob_start();
         extract($datosCompletos);
-        include __DIR__ . '/../vistas/pdfS.html';
+        include __DIR__ . '/../vistas/PDF/pdfS.html';
         $html = ob_get_clean();
 
         // Guardar HTML en un archivo temporal
-        $htmlPath = __DIR__ . '/../vistas/tempS.html';
+        $htmlPath = __DIR__ . '/../vistas/PDF/tempPDF/tempS.html';
         file_put_contents($htmlPath, $html);
 
         // Ruta de salida del PDF
-        $pdfPath = __DIR__ . '/../vistas/solicitud_S.pdf';
+        $pdfPath = __DIR__ . '/../vistas/PDF/generatedPDF/solicitud_S_' . $datosCompletos['no_empleado'] . '-' . $datosCompletos['fecha_solicitud'] . '.pdf';
 
         // Ejecutar Puppeteer con Node.js para generar el PDF
         $script = __DIR__ . '/../js/generate_pdf.js';
