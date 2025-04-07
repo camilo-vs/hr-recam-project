@@ -57,5 +57,5 @@ if (!empty($_REQUEST['m']) && !empty($_REQUEST['c'])) {
 } else {
     // Cargar la página principal por defecto
     $controller = new paginas_controller();
-    $controller->home();
+    $controller->inicio();
 }

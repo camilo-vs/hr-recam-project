@@ -16,13 +16,13 @@
                     if (row.estado === 'PROCESO') {
                         $('#genButtonI').attr('hidden', false);
                         $('#genButtonS').attr('hidden', true);
-                        $('#cambiarEstadoR').linkbutton('enable');
+                        $('#cambiarEstadoI').linkbutton('enable');
                     } else {
-                        $('#cambiarEstadoR').linkbutton('disable');
+                        $('#cambiarEstadoI').linkbutton('disable');
                     }
                 } else {
                     $('#editButtonSal').attr('hidden', true);
-                    $('#cambiarEstadoR').linkbutton('disable');
+                    $('#cambiarEstadoI').linkbutton('disable');
                 }
             },
             onUnselect: function(index, row) {
@@ -31,11 +31,11 @@
                     if (row.estado === 'PROCESO') {
                         $('#genButtonI').attr('hidden', false);
                         $('#genButtonS').attr('hidden', true);
-                        $('#cambiarEstadoR').linkbutton('enable');
+                        $('#cambiarEstadoI').linkbutton('enable');
                     }
                 } else {
                     $('#editButtonSal').attr('hidden', true);
-                    $('#cambiarEstadoR').linkbutton('disable');
+                    $('#cambiarEstadoI').linkbutton('disable');
                 }
 
                 $('input[name="labelDateRequired"]').prop("disabled", true);
@@ -656,7 +656,8 @@
                                 tabS(employee_number);
                                 tabI(employee_number);
 
-
+                                $('#userDialogEstado').dialog('close');
+                                
                                 $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
                             } else {
                                 $.messager.alert('Error', respuesta.msg, 'error');
@@ -1122,6 +1123,7 @@
             return;
         } else {
             var employee_number = row.employee_number_id;
+            console.log(index);
             switch (index) {
                 case 0:
                     tabS(employee_number);
@@ -1139,7 +1141,7 @@
                     $('input[name="labelDateRequest"]').prop("disabled", true);
                     $('#genButton').attr('hidden', true)
                     break;
-                case 3:
+                case 2:
                     tabV(employee_number);
                     $('#editFormSI').prop('hidden', true);
                     $('#editFormVac').prop('hidden', true);
@@ -1273,7 +1275,7 @@
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
                                     onclick="crearSolicitudI()" id="solicitar">Solicitar</a>
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
-                                    onclick="cambiarEstadoI()" id="cambiarEstadoR" disabled>Cambiar Estado</a>
+                                    onclick="cambiarEstadoSI()" id="cambiarEstadoI" disabled>Cambiar Estado</a>
                             </div>
                         </div>
                         <div id="tabVacaciones" title="Vacaciones" style="display:none;">
