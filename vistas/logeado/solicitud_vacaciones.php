@@ -657,7 +657,7 @@
                                 tabI(employee_number);
 
                                 $('#userDialogEstado').dialog('close');
-                                
+                                $('#cambiarEstadoI').linkbutton('disable');
                                 $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
                             } else {
                                 $.messager.alert('Error', respuesta.msg, 'error');
@@ -1123,7 +1123,9 @@
             return;
         } else {
             var employee_number = row.employee_number_id;
-            console.log(index);
+            $('#bajaButton').linkbutton('disable');
+            $('#cambiarEstadoI').linkbutton('disable');    
+            $('#cambiarEstadoR').linkbutton('disable');
             switch (index) {
                 case 0:
                     tabS(employee_number);
