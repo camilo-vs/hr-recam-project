@@ -76,7 +76,6 @@
         .img-logo {
             height: 30px;
             width: 150px;
-            background-color: black;
         }
 
         .label-logo {
@@ -125,7 +124,9 @@
     <div class="container">
         <div class="header">
             <div class="row">
-                <div class="img-logo"></div>
+                <div class="img-logo">
+                    <img src="https://recamlaser.com/wp-content/uploads/cropped-LOGOTIP_RECAM_LASER_LLARG-1024x201.png" alt="" width="150px">
+                </div>
                 <div class="title">PASE DE AUTORIZACIÓN PARA SALIDA DE PERSONAL</div>
                 <div class="conainer-rev">
                     <div class="row">
@@ -157,30 +158,27 @@
             <div class="row">
                 <label style="margin-right: -50px;">FECHA:</label>
                 <div class="line">
-                    <?=$departamento?>
+                    <?=$fecha_solicitud?>
                 </div>
             </div>
             <div class="row">
                 <label style="margin-right: -50px;">SALIDA:</label>
                 <div class="line">
-                    <?=$departamento?>
+                    <?=$fecha_solicitada?>
                 </div>
             </div>
             <div class="row">
                 <label style="margin-right: -50px;">REGRESO:</label>
-                <div class="fill" style="margin-left: 100px; margin-right: -350px;">
-                    <?=$fecha_ingreso?>
+                <div class="fill" style="margin-left: 500px; margin-right: -350px;">
                 </div>
-                <div class="fill" style="margin-right: 0px;">
-                    <?=$fecha_ingreso?>
+                <div class="fill" style="margin-left: -120px;">
                 </div>
                 <div class="fill" style="margin-right: 300px;">
-                    <?=$fecha_ingreso?>
                 </div>
             </div>
             <div class="row">
                 <label style="margin-right: -50px; color: white;">REGRESO:</label>
-                <div class="fill" style="margin-left: 100px; margin-right: -350px; border: white 1px;">
+                <div class="fill" style="margin-left: 280px; margin-right: -350px; border: white 1px;">
                     HORA
                 </div>
                 <div class="fill" style="margin-right: 0px; border: white 1px;">
