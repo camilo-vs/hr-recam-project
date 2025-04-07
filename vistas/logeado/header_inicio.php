@@ -142,10 +142,12 @@
           <li class="nav-item">
             <a class="nav-link" href="index.php?c=paginas&m=gestion_empleados">Gestionar Empleados</a>
           </li>
-          <li class="nav-item dropdown">
+          <li class="nav-item">
+            <a class="nav-link" href="index.php?c=paginas&m=solicitud_vacaciones">Generar Contancias</a>
+          </li>
+          <li class="nav-item dropdown" hidden>
             <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Generar Contancias</button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="index.php?c=paginas&m=solicitud_vacaciones">Vacaciones</a></li>
               <li><a class="dropdown-item" href="#">Salida</a></li>
               <li><a class="dropdown-item" href="#">Ingreso</a></li>
             </ul>

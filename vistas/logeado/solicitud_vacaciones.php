@@ -14,7 +14,8 @@
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButtonSal').attr('hidden', false);
                     if (row.estado === 'PROCESO') {
-                        $('#genButtonSal').attr('hidden', false);
+                        $('#genButtonI').attr('hidden', false);
+                        $('#genButtonS').attr('hidden', true);
                         $('#cambiarEstadoR').linkbutton('enable');
                     } else {
                         $('#cambiarEstadoR').linkbutton('disable');
@@ -28,7 +29,8 @@
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButtonSal').attr('hidden', false);
                     if (row.estado === 'PROCESO') {
-                        $('#genButtonSal').attr('hidden', false)
+                        $('#genButtonI').attr('hidden', false);
+                        $('#genButtonS').attr('hidden', true);
                         $('#cambiarEstadoR').linkbutton('enable');
                     }
                 } else {
@@ -54,7 +56,8 @@
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButtonSal').attr('hidden', false);
                     if (row.estado === 'PROCESO') {
-                        $('#genButtonSal').attr('hidden', false);
+                        $('#genButtonI').attr('hidden', true);
+                        $('#genButtonS').attr('hidden', false);
                         $('#cambiarEstadoR').linkbutton('enable');
                     } else {
                         $('#cambiarEstadoR').linkbutton('disable');
@@ -68,7 +71,8 @@
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButtonSal').attr('hidden', false);
                     if (row.estado === 'PROCESO') {
-                        $('#genButtonSal').attr('hidden', false)
+                        $('#genButtonI').attr('hidden', true);
+                        $('#genButtonS').attr('hidden', false);
                         $('#cambiarEstadoR').linkbutton('enable');
                     }
                 } else {
@@ -128,7 +132,7 @@
                 $('select[name="labelTurno"]').prop("disabled", true);
                 $('#editarSalida').prop("hidden", true);
                 $('#editFormSI').prop('hidden', true);
-                $('#genButtonSal').attr('hidden', true)
+                $('#genButtonSI').attr('hidden', true)
             }
         });
 
@@ -183,6 +187,103 @@
                     alert('Hubo un error al generar el PDF');
                 }
             });
+        });
+
+        $('#genButtonS').on('click', function() {
+            var row = $('#salidaTable').datagrid('getSelected');
+            var type = row.type_request;
+            // Recoger todos los datos
+            var datos = {
+                nombre_empleado: $('input[name="labelName"]').val(),
+                fecha_solicitud: $('input[name="labelDateRequest"]').val(),
+                no_empleado: $('input[name="labelEmployeeNumberId"]').val(),
+                departamento: $('input[name="labelDepartment"]').val(),
+                fecha_solicitada: $('input[name="labelDateRequired"]').val()
+            };
+
+            // Validar que todos los campos estén llenos
+            var camposVacios = Object.keys(datos).filter(key => !datos[key]);
+            if (camposVacios.length > 0) {
+                alert('Por favor, complete todos los campos antes de generar el PDF');
+                return;
+            }
+
+            // Enviar datos por POST
+            $.ajax({
+                url: 'index.php?c=pdf&m=generarPDFS',
+                method: 'POST',
+                data: datos,
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(response) {
+                    // Crear un enlace temporal para descargar el PDF
+                    var blob = new Blob([response], {
+                        type: 'application/pdf'
+                    });
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'solicitud_S.pdf';
+                    link.click();
+                },
+                error: function(xhr, status, error) {
+                    // Ocultar loader
+                    ocultarLoader();
+
+                    console.error('Error generando PDF:', error);
+                    alert('Hubo un error al generar el PDF');
+                }
+            });
+
+        });
+
+        $('#genButtonI').on('click', function() {
+            var row = $('#ingresoTable').datagrid('getSelected');
+            var type = row.type_request;
+            // Recoger todos los datos
+            var datos = {
+                nombre_empleado: $('input[name="labelName"]').val(),
+                fecha_solicitud: $('input[name="labelDateRequest"]').val(),
+                no_empleado: $('input[name="labelEmployeeNumberId"]').val(),
+                departamento: $('input[name="labelDepartment"]').val(),
+                fecha_solicitada: $('input[name="labelDateRequired"]').val()
+            };
+
+            // Validar que todos los campos estén llenos
+            var camposVacios = Object.keys(datos).filter(key => !datos[key]);
+            if (camposVacios.length > 0) {
+                alert('Por favor, complete todos los campos antes de generar el PDF');
+                return;
+            }
+
+            // Enviar datos por POST
+            $.ajax({
+                url: 'index.php?c=pdf&m=generarPDFI',
+                method: 'POST',
+                data: datos,
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(response) {
+                    // Crear un enlace temporal para descargar el PDF
+                    var blob = new Blob([response], {
+                        type: 'application/pdf'
+                    });
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'solicitud_I.pdf';
+                    link.click();
+                },
+                error: function(xhr, status, error) {
+                    // Ocultar loader
+                    ocultarLoader();
+
+                    console.error('Error generando PDF:', error);
+                    alert('Hubo un error al generar el PDF');
+                }
+            });
+
+
         });
 
         // Funciones de cálculo
@@ -510,6 +611,8 @@
                                     index2: index2,
                                     row: updatedData
                                 });
+                                $('#userDialog').dialog('close');
+                                $('#cambiarEstadoR').linkbutton('disable');
                                 $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
                             } else {
                                 $.messager.alert('Error', respuesta.msg, 'error');
@@ -817,7 +920,7 @@
                                 var employee_number = row.employee_number_id;
                                 tabS(employee_number);
                                 tabI(employee_number);
-                                
+
                                 $.messager.alert('Se realizo la petición', 'Se creo la nueva solicitud!', 'info');
                             } else {
                                 $.messager.alert('Error', respuesta.msg, 'error');
@@ -1132,9 +1235,10 @@
                                 <thead>
                                     <tr>
                                         <th data-options="field:'request_id',width:50" hidden>#</th>
+                                        <th data-options="field:'type_request',width:50" hidden>#</th>
                                         <th data-options="field:'employee_number',width:50" hidden>#</th>
                                         <th data-options="field:'employee_name',width:220">Nombre</th>
-                                        <th data-options="field:'estado',width:70">Estado</th>
+                                        <th data-options="field:'estado',width:100">Estado</th>
                                         <th data-options="field:'required_date',width:150">Dia y hora solicitados</th>
                                         <th data-options="field:'request_date',width:150">Fecha de solicitud</th>
                                     </tr>
@@ -1156,9 +1260,10 @@
                                 <thead>
                                     <tr>
                                         <th data-options="field:'request_id',width:50" hidden>#</th>
+                                        <th data-options="field:'type_request',width:50" hidden>#</th>
                                         <th data-options="field:'employee_number',width:50" hidden>#</th>
                                         <th data-options="field:'employee_name',width:220">Nombre</th>
-                                        <th data-options="field:'estado',width:70">Estado</th>
+                                        <th data-options="field:'estado',width:100">Estado</th>
                                         <th data-options="field:'required_date',width:150">Dia y hora solicitados</th>
                                         <th data-options="field:'request_date',width:150">Fecha de solicitud</th>
                                     </tr>
@@ -1290,7 +1395,8 @@
                                 </div>
                             </div>
                             <div class="col-sm-4">
-                                <button type="button" class="btn btn-warning" id="genButtonSI" hidden>Generar solicitud</button>
+                                <button type="button" class="btn btn-warning" id="genButtonS" hidden>Generar solicitud</button>
+                                <button type="button" class="btn btn-warning" id="genButtonI" hidden>Generar solicitud</button>
                             </div>
                         </div>
                     </form>
