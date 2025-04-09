@@ -50,6 +50,7 @@ class empleados_controller
         $data = array();
         // Usa el nombre correcto del input para el id
         $data['employee_number_id'] = $_POST['id'];
+        $data['employee_number_change'] = $_POST['labelEmployeeNumberId'];
         // Usa el nombre correcto de los inputs
         $data['username'] = $_POST['labelName'];
         $data['genero'] = $_POST['labelGenre'];

@@ -96,6 +96,7 @@
 
     function editUser() {
         $('input[name="labelName"]').prop("disabled", false);
+        $('input[name="labelEmployeeNumberId"]').prop("disabled", false);
         $('select[name="labelGenre"]').prop("disabled", false);
         $('select[name="labelRole"]').prop("disabled", false);
         $('#editarUsuario').removeAttr('hidden');
@@ -182,6 +183,7 @@
 
         // Se comparan todos los campos relevantes
         if (
+            row.employee_number_id === $('#editID').val() &&
             row.name === $('#editName').val() &&
             row.genre_wname === $('#editGenre').val() &&
             row.role_wname === $('#editRole').val()
@@ -208,6 +210,7 @@
                     if (respuesta.cambio) {
                         // Actualiza la fila en la tabla con los nuevos datos
                         var updatedData = {
+                            employee_number_id: $('#editID').val(),
                             name: $('#editName').val(),
                             genero: $('#editGenre option:selected').text(),
                             role_name: $('#editRole option:selected').text(),
@@ -229,6 +232,13 @@
                             index: index,
                             row: updatedData
                         });
+
+                        $('input[name="labelName"]').prop("disabled", true);
+                        $('input[name="labelEmployeeNumberId"]').prop("disabled", true);
+                        $('select[name="labelGenre"]').prop("disabled", true);
+                        $('select[name="labelRole"]').prop("disabled", true);
+                        $('input[name="vacationDays"]').prop("disabled", true);
+                        $('#editarUsuario').attr('hidden', true);
 
                         $('#userDialog').dialog('close');
                         $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
@@ -487,7 +497,7 @@
                 </div>
                 <div class="input-group mb-2 w-25">
                     <span class="input-group-text" id="basic-addon1">#</span>
-                    <input type="text" class="form-control" name="labelEmployeeNumberId" id="editID" aria-describedby="basic-addon1" readonly disabled>
+                    <input type="text" class="form-control" name="labelEmployeeNumberId" id="editID" aria-describedby="basic-addon1" disabled>
                 </div>
                 <input type="text" class="form-control w-75 mb-2" id="editName" name="labelName" disabled>
                 <div class="row mb-2">

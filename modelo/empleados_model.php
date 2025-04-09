@@ -224,6 +224,7 @@ class empleados__model
 
         // Se arma la cadena SET con todos los campos a actualizar
         $set = "";
+        $set .= "employee_number_id = '" . $data['employee_number_change'] . "', ";
         $set .= "name = '" . $data['username'] . "', ";
         $set .= "genre = '" . $data['genero'] . "', ";
         $set .= "role = '" . $data['role'] . "', ";

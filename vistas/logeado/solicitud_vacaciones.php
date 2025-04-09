@@ -490,6 +490,8 @@
     });
 
     function tabV(employee_number) {
+        var row = $('#userTable').datagrid('getSelected');
+        var employee_number = row.employee_number_id;
         let diasSolicitados;
         $.ajax({
             url: 'index.php?c=vacaciones&m=consultarSolicitudes',
@@ -611,6 +613,7 @@
 
     function cambiarEstadoFunc() {
         var row = $('#userTable').datagrid('getSelected');
+        employee_number = row.employee_number;
         var row2 = $('#userTable2').datagrid('getSelected');
         var index2 = $('#userTable2').datagrid('getRowIndex', row);
 
@@ -637,16 +640,9 @@
                         if (respuesta.error === true) {
                             $.messager.alert('Error', respuesta.msg, 'error');
                         } else {
+                            tabV(employee_number);
                             if (respuesta.cambio) {
-                                var updatedData = {
-                                    estado: cambio
-                                };
-
-                                $('#userTable2').datagrid('updateRow', {
-                                    index2: index2,
-                                    row: updatedData
-                                });
-                                $('#userDialog').dialog('close');
+                                $('#userDialogEstado').dialog('close');
                                 $('#cambiarEstadoR').linkbutton('disable');
                                 $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
                             } else {
@@ -672,6 +668,7 @@
             cambio = 'RECHAZADA';
             estado = 3;
         }
+        
         $.messager.confirm('Confirmación', 'Se cambiara el estado a ' + cambio + ' del usuario ' + row.name + ' ¿Está seguro?', function(r) {
             if (r) {
                 $.ajax({
@@ -853,6 +850,7 @@
 
     function updateForm() {
         var row = $('#userTable2').datagrid('getSelected');
+        employee_number = row.employee_number;
         if (!row) {
             $.messager.alert('Error', 'Por favor selecciona un usuario para actualizar.', 'error');
             return;
@@ -894,17 +892,9 @@
                 if (respuesta.error === true) {
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
+                    tabV(employee_number);
                     if (respuesta.cambio) {
                         // Actualiza la fila en la tabla con los nuevos datos
-                        var updatedData = {
-
-                        };
-
-                        $('#userTable2').datagrid('updateRow', {
-                            index: index,
-                            row: updatedData
-                        });
-
                         $('#userDialog').dialog('close');
                         $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
                         $('input[name="labelDays"]').prop("disabled", true);

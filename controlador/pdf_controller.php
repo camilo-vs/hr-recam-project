@@ -5,25 +5,49 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 class pdf_controller {
     public function generarPDF() {
+
+        function formatearFecha($fecha) {
+            if (empty($fecha)) return '';
+        
+            // Lista de posibles formatos
+            $formatos = [
+                'Y-m-d',         // ej: 2025-04-09
+                'Y-m-d H:i:s',   // ej: 2025-04-09 14:00:00
+                'd/m/Y H:i:s',   // ej: 13/04/2019 13:52:41
+                'd/m/Y'          // ej: 13/04/2019
+            ];
+        
+            foreach ($formatos as $formato) {
+                $dt = \DateTime::createFromFormat($formato, $fecha);
+                if ($dt !== false) {
+                    return $dt->format('d-m-Y');
+                }
+            }
+        
+            return ''; // Si ningún formato fue válido
+        }
+
         // Recoger datos del POST
         $datos = $_POST;
 
         // Extraer datos con valores por defecto
         $datosCompletos = [
             'requestId' => $datos['id'] ?? '',
-            'fecha_solicitud' => $datos['fecha_solicitud'] ?? date('d/m/Y'),
+            'fecha_solicitud' => formatearFecha($datos['fecha_solicitud'] ?? date('Y-m-d')),
             'nombre_empleado' => $datos['nombre_empleado'] ?? '',
             'no_empleado' => $datos['no_empleado'] ?? '',
             'departamento' => $datos['departamento'] ?? '',
             'tiempo_servicio' => $datos['tiempo_servicio'] ?? '',
-            'fecha_ingreso' => $datos['fecha_ingreso'] ?? '',
+            'fecha_ingreso' =>formatearFecha($datos['fecha_ingreso'] ?? date('Y-m-d')),
             'dias_disponibles' => $datos['dias_disponibles'] ?? '',
             'dias_corresponden' => $datos['dias_corresponden'] ?? '',
             'dias_solicitados' => $datos['dias_solicitados'] ?? '',
-            'fecha_desde' => $datos['fecha_desde'] ?? '',
-            'fecha_hasta' => $datos['fecha_hasta'] ?? '',
-            'fecha_regreso' => $datos['fecha_regreso'] ?? ''
+            'fecha_desde' => formatearFecha($datos['fecha_desde'] ?? date('Y-m-d')),
+            'fecha_hasta' => formatearFecha($datos['fecha_hasta'] ?? date('Y-m-d')),
+            'fecha_regreso' => formatearFecha($datos['fecha_regreso'] ?? date('Y-m-d'))
         ];
+
+        var_dump($datosCompletos['fecha_ingreso']);
 
         // Capturar HTML de la plantilla
         ob_start();
@@ -62,8 +86,8 @@ class pdf_controller {
 
         // Extraer datos con valores por defecto
         $datosCompletos = [
-            'fecha_solicitud' => $datos['fecha_solicitud'] ?? date('d/m/Y'),
-            'fecha_solicitada' => $datos['fecha_solicitada'] ?? '',
+            'fecha_solicitud' => formatearFecha($datos['fecha_solicitud']) ?? date('d/m/Y'),
+            'fecha_solicitada' => formatearFecha($datos['fecha_solicitada']) ?? '',
             'nombre_empleado' => $datos['nombre_empleado'] ?? '',
             'no_empleado' => $datos['no_empleado'] ?? '',
             'departamento' => $datos['departamento'] ?? ''
@@ -105,8 +129,8 @@ class pdf_controller {
 
         // Extraer datos con valores por defecto
         $datosCompletos = [
-            'fecha_solicitud' => $datos['fecha_solicitud'] ?? date('d/m/Y'),
-            'fecha_solicitada' => $datos['fecha_solicitada'] ?? '',
+            'fecha_solicitud' => formatearFecha($datos['fecha_solicitud']) ?? date('d/m/Y'),
+            'fecha_solicitada' => formatearFecha($datos['fecha_solicitada']) ?? '',
             'nombre_empleado' => $datos['nombre_empleado'] ?? '',
             'no_empleado' => $datos['no_empleado'] ?? '',
             'departamento' => $datos['departamento'] ?? ''
