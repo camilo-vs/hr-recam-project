@@ -114,7 +114,7 @@ class empleados__model
                 INNER JOIN roles role ON employee.role = role.role_id
                 INNER JOIN departments dept ON role.department = dept.department_id
                 LEFT JOIN employees sup ON dept.supervisor_number = sup.employee_number_id
-                ORDER BY employee.hire_date DESC";
+                ORDER BY employee.employee_number_id ASC";
     
         $result = mysqli_query($this->db, $sql);
 

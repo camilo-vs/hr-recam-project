@@ -14,8 +14,14 @@ class vacaciones__model
     public function consultarTotalDias($employee_number)
     {
         mysqli_select_db($this->db, "hr_system");
+        $anioActual = date('Y');
 
-        $sql = "SELECT SUM(days) AS total_dias FROM vacation_requests WHERE state = 2 AND employee_number = " . intval($employee_number);
+        $sql = "SELECT SUM(days) AS total_dias 
+                    FROM vacation_requests 
+                    WHERE state = 2 
+                    AND employee_number = " . intval($employee_number) . " 
+                    AND YEAR(request_date) = " . intval($anioActual);
+
         $result = mysqli_query($this->db, $sql);
 
         if ($result) {
@@ -115,21 +121,23 @@ class vacaciones__model
                         WHEN vr.state = 3 THEN 'RECHAZADA'
                         ELSE 'Desconocido'
                     END AS estado,
-                    DATE_FORMAT(vr.request_date, '%d/%m/%Y %H:%i:%s') AS request_date,
+                    DATE_FORMAT(vr.request_date, '%d/%m/%Y') AS request_date,
                     vr.days,
                     DATE_FORMAT(vr.start_date, '%d/%m/%Y') AS start_date,
                     DATE_FORMAT(vr.finish_date, '%d/%m/%Y') AS finish_date,
                     DATE_FORMAT(vr.back_date, '%d/%m/%Y') AS back_date,
-                    vr.work_shift
+                    vr.work_shift,
+                    vr.year
                 FROM vacation_requests vr
-                INNER JOIN employees e ON vr.employee_number = e.employee_number_id ";
+                INNER JOIN employees e ON vr.employee_number = e.employee_number_id";
 
         // Agregar condición si se recibe un employee id
 
-            $sql .= "WHERE vr.employee_number = " . intval($employee_number) . " ";
+        $sql .= " WHERE vr.employee_number = " . intval($employee_number) . " ";
         
 
-        $sql .= "ORDER BY vr.request_date ASC";
+        $sql .= " ORDER BY vr.state ASC";
+
         
 
         $result = mysqli_query($this->db, $sql);
@@ -175,16 +183,16 @@ class vacaciones__model
                         ELSE 'Desconocido'
                     END AS estado,
                     DATE_FORMAT(r.required_date, '%d/%m/%Y %H:%i:%s') AS required_date,
-                    DATE_FORMAT(r.request_date, '%d/%m/%Y') AS request_date
+                    DATE_FORMAT(r.request_date, '%d/%m/%Y %H:%i:%s') AS request_date
                 FROM requests r
                 INNER JOIN employees e ON r.employee_number = e.employee_number_id ";
 
         // Agregar condición si se recibe un employee id
 
-        $sql .= "WHERE r.employee_number = " . intval($employee_number) . " ";
-        $sql .= "AND r.type_request = " . intval($type_request) . " ";
+        $sql .= " WHERE r.employee_number = " . intval($employee_number) . " ";
+        $sql .= " AND r.type_request = " . intval($type_request) . " ";
 
-        $sql .= "ORDER BY r.request_date DESC";
+        $sql .= " ORDER BY r.state ASC";
         
 
         $result = mysqli_query($this->db, $sql);
@@ -196,7 +204,7 @@ class vacaciones__model
             }
             $respuesta = array(
                 'error' => false,
-                'msg' => 'Se encontraron las solicitudes de vacaciones',
+                'msg' => 'Se encontraron las solicitudes de ingreso - salida',
                 'sql' => $sql,
                 'registros' => $requests
             );

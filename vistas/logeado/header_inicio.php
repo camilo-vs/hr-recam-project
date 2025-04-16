@@ -18,7 +18,7 @@
   <link rel="stylesheet" type="text/css" href="assets/easyui/themes/color.css">
   <script type="text/javascript" src="assets/easyui/js/jquery.min.js"></script>
   <script type="text/javascript" src="assets/easyui/js/jquery.easyui.min.js"></script>
-
+  <script type="text/javascript" src="assets/easyui/filter/datagrid-filter.js"></script>
   <style>
     .bd-placeholder-img {
       font-size: 1.125rem;
@@ -136,22 +136,17 @@
           <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="index.php?c=paginas&m=inicio">Inicio</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="index.php?c=paginas&m=gestion_usuarios" hidden>Gestionar Usuaios</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="index.php?c=paginas&m=gestion_empleados">Gestionar Empleados</a>
+          <li class="nav-item dropdown">
+            <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Gestionar Registros</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_empleados">Empleados</a>
+              <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_usuarios">Usuaios</a>
+            </ul>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="index.php?c=paginas&m=solicitud_vacaciones">Generar Contancias</a>
           </li>
-          <li class="nav-item dropdown" hidden>
-            <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Generar Contancias</button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">Salida</a></li>
-              <li><a class="dropdown-item" href="#">Ingreso</a></li>
-            </ul>
-          </li>
+       
         </ul>
         <a type="button" class="btn btn-light" href="index.php?c=paginas&m=logout"><i class="bi bi-person-fill"></i></a>
       </div>
