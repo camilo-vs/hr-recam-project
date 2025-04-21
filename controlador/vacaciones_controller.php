@@ -15,7 +15,8 @@ class vacaciones_controller
     {
         // Capturamos el employee id (puede venir por GET o POST)
         $employee_number = isset($_REQUEST['employee_number']) ? $_REQUEST['employee_number'] : '';
-        echo $this->model->consultarSolicitudes($employee_number);
+        $preev_year = isset($_REQUEST['preev_year']) ? $_REQUEST['preev_year'] : '';
+        echo $this->model->consultarSolicitudes($employee_number,$preev_year);
     }
 
     public function consultarSolicitudesSI()
@@ -30,7 +31,7 @@ class vacaciones_controller
     public function crearSolicitud()
     {
         $data['employee_number'] = $_POST['employee_number'];
-
+        $data['preev_year'] = $_POST['preev_year'];
         echo $this->model->crearSolicitud($data);
     }
 

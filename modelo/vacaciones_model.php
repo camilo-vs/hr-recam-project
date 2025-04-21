@@ -11,19 +11,24 @@ class vacaciones__model
     }
 
 
-    public function consultarTotalDias($employee_number)
+    public function consultarTotalDias($employee_number, $preev_year)
     {
         mysqli_select_db($this->db, "hr_system");
-        $anioActual = date('Y');
-
+    
+        // Cambiar el año si preev_year es true
+        $anio = date('Y');
+        if ($preev_year === true || $preev_year === "true" || $preev_year == 1) {
+            $anio = date('Y', strtotime('+1 year'));
+        }
+    
         $sql = "SELECT SUM(days) AS total_dias 
-                    FROM vacation_requests 
-                    WHERE state = 2 
-                    AND employee_number = " . intval($employee_number) . " 
-                    AND YEAR(request_date) = " . intval($anioActual);
-
+                FROM vacation_requests 
+                WHERE state = 2 
+                AND employee_number = " . intval($employee_number) . " 
+                AND year = " . intval($anio);
+    
         $result = mysqli_query($this->db, $sql);
-
+    
         if ($result) {
             $row = mysqli_fetch_assoc($result);
             return $row['total_dias'] ?? 0; // Si es NULL, devuelve 0
@@ -31,6 +36,7 @@ class vacaciones__model
             return 0; // Si hay error en la consulta, devuelve 0
         }
     }
+    
 
     public function cambiarEstado($data)
     {
@@ -106,10 +112,9 @@ class vacaciones__model
         return json_encode($respuesta);
     }
     
-    public function consultarSolicitudes($employee_number)
+    public function consultarSolicitudes($employee_number,$preev_year)
     {
         mysqli_select_db($this->db, "hr_system");
-
         $sql = "SELECT 
                     vr.request_vacation_id,
                     vr.employee_number,
@@ -136,7 +141,7 @@ class vacaciones__model
         $sql .= " WHERE vr.employee_number = " . intval($employee_number) . " ";
         
 
-        $sql .= " ORDER BY vr.state ASC";
+        $sql .= " ORDER BY vr.request_date DESC, vr.state ASC ";
 
         
 
@@ -144,7 +149,7 @@ class vacaciones__model
 
         if ($result) {
             $requests = array();
-            $consultarTotalDias = $this->consultarTotalDias($employee_number);
+            $consultarTotalDias = $this->consultarTotalDias($employee_number,$preev_year);
             while ($row = mysqli_fetch_assoc($result)) {
                 $requests[] = $row;
             }
@@ -229,7 +234,13 @@ class vacaciones__model
         }
 
         $employee_number = mysqli_real_escape_string($this->db, $data['employee_number']);
-        $sql = "INSERT INTO vacation_requests (employee_number) VALUES ('$employee_number')";
+        if($data['preev_year'] == true){
+            $anioSiguiente = date('Y', strtotime('+1 year'));
+            $sql = "INSERT INTO vacation_requests (employee_number,year) VALUES ('$employee_number',  $anioSiguiente)";
+        }else{
+            $sql = "INSERT INTO vacation_requests (employee_number) VALUES ('$employee_number')";
+        }
+
         
         $result = mysqli_query($this->db, $sql);
 

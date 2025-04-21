@@ -382,7 +382,6 @@
     function consultarDatosExtraTABLA() {
         // Obtiene el índice seleccionado
         var index = $('#puesto').prop('selectedIndex');
-        console.log(index);
         // Retorna el objeto AJAX (Deferred)
         return $.ajax({
             url: 'index.php?c=empleados&m=consultarDatosExtra',
@@ -397,8 +396,7 @@
 
     function consultarDatosExtra() {
         // Obtiene el índice seleccionado
-        var index = $('#editRole').prop('selectedIndex');
-
+        var index = $('#editRole').val();
         $.ajax({
             url: 'index.php?c=empleados&m=consultarDatosExtra',
             type: 'POST',

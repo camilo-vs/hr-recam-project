@@ -410,7 +410,7 @@
         $('#userTable').datagrid({
             onSelect: function (index, row) {
                 const checkbox = document.getElementById("switchCheckDefault");
-                checkbox.checked = false; 
+                checkbox.checked = false;
                 // Filtrar la segunda tabla (userTable2) mostrando solo los registros con el mismo employee_number
                 var row = $('#userTable').datagrid('getSelected');
                 var employee_number = row.employee_number_id;
@@ -479,11 +479,16 @@
                                     $('#switch_anio_entrante').show();
                                 }
                                 // Mostrar los días disponibles en la etiqueta correspondiente
-                                $('h3[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días disponibles");
+                                $('h4[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días");
                                 $('input[name="labelVacationDaysIn"]').val(diasDisponibles);
 
-                                $('#solicitarVac').prop('hidden', diasDisponibles <= 0);
-                                $('#tt ul li:contains("Vacaciones")').toggle(diasDisponibles > 0);
+                                if (diasDisponibles == 0) {
+                                    $('#solicitarVac').linkbutton('disable');
+                                } else {
+                                    $('#solicitarVac').attr('hidden', false);
+                                    $('#solicitarVac').linkbutton('enable');
+                                }
+
                             }
                         }
                     });
@@ -503,7 +508,7 @@
                 $('#tt').prop('hidden', false);
             },
             onUnselect: function (index, row) {
-                $('h3[name="vacationDays"]').text("");
+                $('h4[name="vacationDays"]').text("");
                 $('input[name="labelDays"]').prop("disabled", true);
                 $('input[name="labelDateR"]').prop("disabled", true);
                 $('input[name="labelDateC"]').prop("disabled", true);
@@ -577,13 +582,15 @@
     function tabV(employee_number) {
         var row = $('#userTable').datagrid('getSelected');
         var employee_number = row.employee_number_id;
+        var switchElement = document.getElementById("switchCheckDefault");
         let diasSolicitados;
         $.ajax({
             url: 'index.php?c=vacaciones&m=consultarSolicitudes',
             type: 'GET',
             dataType: 'json',
             data: {
-                employee_number: employee_number
+                employee_number: employee_number,
+                preev_year: switchElement.checked
             },
             cache: false,
             success: function (respuesta) {
@@ -631,15 +638,27 @@
 
                     // Calcular los días disponibles después de restar los días solicitados
                     let diasDisponibles = diasVacaciones - diasSolicitados;
+                    console.log(diasDisponibles, diferenciaMeses);
                     if (diasDisponibles == 0 && diferenciaMeses >= 16) {
                         $('#switch_anio_entrante').show();
                     }
                     // Mostrar los días disponibles en la etiqueta correspondiente
-                    $('h3[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días disponibles");
+
+                    if (switchElement.checked) {
+                        $('#switch_anio_entrante').show();
+                        $('h4[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días");
+                    } else {
+                        $('h4[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días");
+                    }
+
                     $('input[name="labelVacationDaysIn"]').val(diasDisponibles);
 
-                    $('#solicitarVac').prop('hidden', diasVacaciones <= 0);
-                    $('#tt ul li:contains("Vacaciones")').toggle(diasVacaciones > 0);
+                    if (diasDisponibles == 0) {
+                        $('#solicitarVac').linkbutton('disable');
+                    } else {
+                        $('#solicitarVac').attr('hidden', false);
+                        $('#solicitarVac').linkbutton('enable');
+                    }
                 }
             }
         });
@@ -1152,6 +1171,7 @@
 
     function crearSolicitud() {
         var rows = $('#userTable2').datagrid('getRows');
+        var switchElement = document.getElementById("switchCheckDefault");
         var existeCreada = rows.some(row => row.estado === 'CREADA' || row.estado === 'PROCESO'); // Verificar si existe una fila con estado 'CREADA'
 
         if (existeCreada) {
@@ -1170,7 +1190,8 @@
                     type: 'POST',
                     dataType: 'json',
                     data: {
-                        employee_number: employee_number
+                        employee_number: employee_number,
+                        preev_year: switchElement.checked
                     },
                     cache: false,
                     success: function (respuesta) {
@@ -1370,13 +1391,15 @@
 
     function mostrarVacaciones() {
         const switchElement = document.getElementById("switchCheckDefault");
-
+        var row = $('#userTable').datagrid('getSelected');
+        var employee_number = row.employee_number_id;
+        tabV(employee_number);
+        $('#solicitarVac').removeAttr('hidden');
         if (switchElement.checked) {
-            $('#tt ul li:contains("Vacaciones")').show();
+            $('#solicitarVac').linkbutton('enable');
             $('#tt').tabs('select', 'Vacaciones');
         } else {
-            $('#tt ul li:contains("Vacaciones")').hide();
-            $('#tt').tabs('select', 'Ingreso');
+            $('#solicitarVac').linkbutton('disable');
         }
     }
 </script>
@@ -1398,7 +1421,6 @@
                         </thead>
                     </table>
                 </div>
-
                 <div class="col-md-6">
                     <!-- Segunda sección (30%) -->
                     <form id="editForm" action="post" hidden>
@@ -1446,27 +1468,38 @@
                                     <input type="text" class="form-control" id="editSupervisor" name="labelSupervisor"
                                         disabled>
                                 </div>
-                                <div class="col-sm-8 mb-4">
-                                    <div class="d-inline-flex">
-                                        <div class="p-2">
-                                            <p class="mb-0" id="titleVac">Días de vacaciones:</p>
-                                            <h3 name="vacationDays" class="mt-0"></h3>
-                                        </div>
-                                        <div id="switch_anio_entrante" class="p-2"
-                                            style="width: 415px;height: 40px;border-radius: 10px; background-color: #efbb2a;">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                    id="switchCheckDefault" onchange="mostrarVacaciones()">
-                                                <label class="form-check-label" for="switchCheckDefault">Utilizar
-                                                    vacaciones <span id="anioSiguiente"></span></label>
+                                <div class="mb-2">
+                                    <div class="alert alert-primary" role="alert">
+                                        <div
+                                            class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                                            <!-- Texto de días de vacaciones -->
+                                            <div class="d-flex align-items-center gap-2">
+                                                <p class="mb-0 fw-semibold" id="titleVac">Días disponibles:</p>
+                                                <h4 name="vacationDays" class="mb-0 text-success"></h4>
+                                            </div>
+
+                                            <!-- Switch para cambiar de año -->
+                                            <div id="switch_anio_entrante" class="p-3 rounded"
+                                                style="background-color: #fff3cd; border: 1px solid #ffeeba;">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                        id="switchCheckDefault" onchange="mostrarVacaciones()">
+                                                    <label class="form-check-label fw-medium" for="switchCheckDefault">
+                                                        Usar vacaciones del año <span id="anioSiguiente"
+                                                            class="fw-bold"></span>
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
+            </div>
+            <div class="row">
                 <div class="col-md-6">
                     <div id="tt" class="easyui-tabs" style="width:100%;height:330px;"
                         data-options="onSelect: onTabSelect" hidden>
@@ -1493,10 +1526,11 @@
                                     plain="true" onclick="cambiarEstadoSI()" id="cambiarEstadoI" disabled>Cambiar
                                     Estado</a>
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
-                                    onclick="document.getElementById('fileInput').click();" id="subirContsIngreso">
+                                    onclick="document.getElementById('fileInputIngreso').click();"
+                                    id="subirContsIngreso">
                                     Subir Archivo
                                 </a>
-                                <input type="file" id="fileInput" style="display: none;"
+                                <input type="file" id="fileInputIngreso" style="display: none;" accept=".pdf" 
                                     onchange="handleFileUpload(this.files[0],0)" />
                             </div>
                         </div>
@@ -1521,6 +1555,12 @@
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
                                     plain="true" onclick="cambiarEstadoSI()" id="cambiarEstadoR" disabled>Cambiar
                                     Estado</a>
+                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
+                                    onclick="document.getElementById('fileInputSalida').click();" id="subirContsSalida">
+                                    Subir Archivo
+                                </a>
+                                <input type="file" id="fileInputSalida" style="display: none;" accept=".pdf" 
+                                    onchange="handleFileUpload(this.files[0],0)" />
                             </div>
                         </div>
                         <div id="tabVacaciones" title="Vacaciones" style="display:none;">
@@ -1548,6 +1588,13 @@
                                     onclick="crearSolicitud()" id="solicitarVac" hidden>Solicitar</a>
                                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
                                     plain="true" onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
+                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
+                                    onclick="document.getElementById('fileInputVacaciones').click();"
+                                    id="subirContsVacaciones">
+                                    Subir Archivo
+                                </a>
+                                <input type="file" id="fileInputVacaciones" style="display: none;" accept=".pdf" 
+                                    onchange="handleFileUpload(this.files[0],0)" />
                             </div>
                         </div>
                     </div>
@@ -1661,31 +1708,29 @@
                         </div>
                     </form>
                 </div>
-
-                <!--MODAL-->
-                <div id="userDialogEstado" class="easyui-dialog" title="Cambiar estado"
-                    style="width:400px;height:200px;padding:10px" closed="true" buttons="#dlg-buttons">
-                    <form id="formEstado" method="post">
-                        <div class="form-group py-3">
-                            <label for="estadoSelect">Cambiar a:</label>
-                            <select id="estadoSelect" name="estadoSelect" class="form-control">
-                                <option value="2">APROVADA</option>
-                                <option value="3">RECHAZADA</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <!--MODAL-BUTTONS-->
-                <div id="dlg-buttons">
-                    <button type="button" class="btn btn-success" id="cambiarEstadoButton"
-                        onclick="cambiarEstadoFunc()">Cambiar</button>
-                    <button type="button" class="btn btn-success" id="cambiarEstadoSButton"
-                        onclick="cambiarEstadoSIFunc()">Cambiar</button>
-                    <button type="button" class="btn btn-danger"
-                        onclick="$('#userDialogEstado').dialog('close')">Cancelar</button>
-                </div>
-
             </div>
         </div>
     </div>
 </body>
+
+<!--MODAL-->
+<div id="userDialogEstado" class="easyui-dialog" title="Cambiar estado" style="width:400px;height:200px;padding:10px"
+    closed="true" buttons="#dlg-buttons">
+    <form id="formEstado" method="post">
+        <div class="form-group py-3">
+            <label for="estadoSelect">Cambiar a:</label>
+            <select id="estadoSelect" name="estadoSelect" class="form-control">
+                <option value="2">APROVADA</option>
+                <option value="3">RECHAZADA</option>
+            </select>
+        </div>
+    </form>
+</div>
+<!--MODAL-BUTTONS-->
+<div id="dlg-buttons">
+    <button type="button" class="btn btn-success" id="cambiarEstadoButton"
+        onclick="cambiarEstadoFunc()">Cambiar</button>
+    <button type="button" class="btn btn-success" id="cambiarEstadoSButton"
+        onclick="cambiarEstadoSIFunc()">Cambiar</button>
+    <button type="button" class="btn btn-danger" onclick="$('#userDialogEstado').dialog('close')">Cancelar</button>
+</div>
