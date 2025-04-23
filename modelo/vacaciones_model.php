@@ -14,21 +14,21 @@ class vacaciones__model
     public function consultarTotalDias($employee_number, $preev_year)
     {
         mysqli_select_db($this->db, "hr_system");
-    
+
         // Cambiar el año si preev_year es true
         $anio = date('Y');
         if ($preev_year === true || $preev_year === "true" || $preev_year == 1) {
             $anio = date('Y', strtotime('+1 year'));
         }
-    
+
         $sql = "SELECT SUM(days) AS total_dias 
                 FROM vacation_requests 
                 WHERE state = 2 
                 AND employee_number = " . intval($employee_number) . " 
                 AND year = " . intval($anio);
-    
+
         $result = mysqli_query($this->db, $sql);
-    
+
         if ($result) {
             $row = mysqli_fetch_assoc($result);
             return $row['total_dias'] ?? 0; // Si es NULL, devuelve 0
@@ -36,7 +36,7 @@ class vacaciones__model
             return 0; // Si hay error en la consulta, devuelve 0
         }
     }
-    
+
 
     public function cambiarEstado($data)
     {
@@ -46,7 +46,7 @@ class vacaciones__model
             session_start();
         }
 
-        $set = "state = '" . $data['estado'] . "'"; 
+        $set = "state = '" . $data['estado'] . "'";
         $condicion = "request_vacation_id = " . $data['id'];
 
         $sqlUpdate = "UPDATE vacation_requests SET " . $set . " WHERE " . $condicion . "";
@@ -83,7 +83,7 @@ class vacaciones__model
             session_start();
         }
 
-        $set = "state = '" . $data['estado'] . "'"; 
+        $set = "state = '" . $data['estado'] . "'";
         $condicion = "request_id = " . $data['id'];
 
         $sqlUpdate = "UPDATE requests SET " . $set . " WHERE " . $condicion . "";
@@ -111,8 +111,8 @@ class vacaciones__model
 
         return json_encode($respuesta);
     }
-    
-    public function consultarSolicitudes($employee_number,$preev_year)
+
+    public function consultarSolicitudes($employee_number, $preev_year)
     {
         mysqli_select_db($this->db, "hr_system");
         $sql = "SELECT 
@@ -132,24 +132,26 @@ class vacaciones__model
                     DATE_FORMAT(vr.finish_date, '%d/%m/%Y') AS finish_date,
                     DATE_FORMAT(vr.back_date, '%d/%m/%Y') AS back_date,
                     vr.work_shift,
-                    vr.year
+                    vr.year,
+                    c.url as url_doc
                 FROM vacation_requests vr
-                INNER JOIN employees e ON vr.employee_number = e.employee_number_id";
+                INNER JOIN employees e ON vr.employee_number = e.employee_number_id
+                LEFT JOIN archivo_contancia c ON c.request_vacation_id = vr.request_vacation_id";
 
         // Agregar condición si se recibe un employee id
 
         $sql .= " WHERE vr.employee_number = " . intval($employee_number) . " ";
-        
+
 
         $sql .= " ORDER BY vr.request_date DESC, vr.state ASC ";
 
-        
+
 
         $result = mysqli_query($this->db, $sql);
 
         if ($result) {
             $requests = array();
-            $consultarTotalDias = $this->consultarTotalDias($employee_number,$preev_year);
+            $consultarTotalDias = $this->consultarTotalDias($employee_number, $preev_year);
             while ($row = mysqli_fetch_assoc($result)) {
                 $requests[] = $row;
             }
@@ -188,17 +190,22 @@ class vacaciones__model
                         ELSE 'Desconocido'
                     END AS estado,
                     DATE_FORMAT(r.required_date, '%d/%m/%Y %H:%i:%s') AS required_date,
-                    DATE_FORMAT(r.request_date, '%d/%m/%Y %H:%i:%s') AS request_date
+                    DATE_FORMAT(r.request_date, '%d/%m/%Y %H:%i:%s') AS request_date,
+                    c.url as url_doc
                 FROM requests r
-                INNER JOIN employees e ON r.employee_number = e.employee_number_id ";
+                INNER JOIN employees e ON r.employee_number = e.employee_number_id 
+                LEFT JOIN archivo_contancia c ON c.request_id = r.request_id
+                ";
 
         // Agregar condición si se recibe un employee id
 
         $sql .= " WHERE r.employee_number = " . intval($employee_number) . " ";
+
         $sql .= " AND r.type_request = " . intval($type_request) . " ";
 
+        $sql .= " GROUP BY r.request_id, r.employee_number, r.type_request, e.name, r.state, r.required_date, r.request_date ";
         $sql .= " ORDER BY r.state ASC";
-        
+
 
         $result = mysqli_query($this->db, $sql);
 
@@ -234,14 +241,14 @@ class vacaciones__model
         }
 
         $employee_number = mysqli_real_escape_string($this->db, $data['employee_number']);
-        if($data['preev_year'] == true){
+        if ($data['preev_year'] == true) {
             $anioSiguiente = date('Y', strtotime('+1 year'));
             $sql = "INSERT INTO vacation_requests (employee_number,year) VALUES ('$employee_number',  $anioSiguiente)";
-        }else{
+        } else {
             $sql = "INSERT INTO vacation_requests (employee_number) VALUES ('$employee_number')";
         }
 
-        
+
         $result = mysqli_query($this->db, $sql);
 
         if (!$result) {
@@ -272,20 +279,20 @@ class vacaciones__model
     public function crearSolicitudSI($data)
     {
         mysqli_select_db($this->db, "hr_system");
-    
+
         if (!isset($_SESSION)) {
             session_start();
         }
-    
+
         $employee_number = mysqli_real_escape_string($this->db, $data['employee_number']);
         $type_request = mysqli_real_escape_string($this->db, $data['type_request']);
-    
+
         $sql = "INSERT INTO requests (employee_number, type_request) VALUES ('$employee_number', '$type_request')";
-        
+
         $result = mysqli_query($this->db, $sql);
-    
+
         if (!$result) {
-    
+
             $respuesta = array(
                 'error' => true,
                 'msg' => 'Error al insertar: ' . mysqli_error($this->db),
@@ -305,7 +312,7 @@ class vacaciones__model
                 'creado' => true,
             );
         }
-    
+
         return json_encode($respuesta);
     }
 
@@ -394,6 +401,113 @@ class vacaciones__model
         }
 
         return json_encode($respuesta);
+    }
+
+    public function subirConstancia($data)
+    {
+        mysqli_select_db($this->db, "hr_system");
+
+        if (isset($data['archivo']) && isset($data['opcion'])) {
+            $opcion = intval($_POST['opcion']);
+            $constancia = '';
+            switch ($opcion) {
+                case 0:
+                    $constancia = 'Ingresos';
+                    break;
+                case 1:
+                    $constancia = 'Salida';
+                    break;
+                default:
+                    $constancia = 'Vacaciones';
+                    break;
+            }
+
+            $archivo = $data['archivo'];
+
+            // Validar que sea un PDF
+            $tipo = mime_content_type($archivo['tmp_name']);
+            if ($tipo !== 'application/pdf') {
+                http_response_code(400);
+                echo json_encode(['error' => true, 'msg' => 'Solo se permiten archivos PDF']);
+                exit;
+            }
+
+            // Crear carpeta de destino según opción
+            $carpetaDestino = "Constancias/$constancia/";
+            if (!is_dir($carpetaDestino)) {
+                mkdir($carpetaDestino, 0777, true);
+            }
+
+            $nombreFinal = "" . $constancia . "_" . $data['id'] . ".pdf";
+            $rutaFinal = $carpetaDestino . $nombreFinal;
+
+            // Revisar si ya existe un archivo para este ID y tipo
+            $checkQuery = "";
+            $whereCondition = "";
+            switch ($opcion) {
+                case 2:
+                    $whereCondition = "request_vacation_id = " . intval($data['id']);
+                    break;
+                default:
+                    $whereCondition = "request_id = " . intval($data['id']);
+                    break;
+            }
+
+            $checkQuery = "SELECT id FROM archivo_contancia WHERE $whereCondition AND Tipo = '$constancia'";
+            $checkResult = mysqli_query($this->db, $checkQuery);
+            $registroExiste = ($checkResult && mysqli_num_rows($checkResult) > 0);
+
+            // Subir archivo (sobreescribir si ya existe)
+            $subido = move_uploaded_file($archivo['tmp_name'], $rutaFinal);
+
+            if ($registroExiste) {
+                // Actualizar registro existente
+                $row = mysqli_fetch_assoc($checkResult);
+                $updateSql = "UPDATE archivo_contancia SET url = '$rutaFinal', fecha_subida = NOW() WHERE id = " . intval($row['id']);
+                $result = mysqli_query($this->db, $updateSql);
+
+                $respuesta = [
+                    'error' => !$result,
+                    'msg' => $result ? 'Archivo actualizado correctamente' : 'Error al actualizar: ' . mysqli_error($this->db),
+                    'url' => $rutaFinal,
+                    'sql' => $updateSql,
+                    'actualizado' => true,
+                    'subido' => $subido
+                ];
+            } else {
+                // Insertar nuevo registro
+                $values = "'" . $rutaFinal . "',";
+                switch ($opcion) {
+                    case 2:
+                        $values .= "null," . intval($data['id']) . ",";
+                        break;
+                    default:
+                        $values .= intval($data['id']) . ",null,";
+                        break;
+                }
+                $values .= "'" . $constancia . "'";
+
+                $insertSql = "INSERT INTO archivo_contancia (url, request_id, request_vacation_id, Tipo) VALUES ($values)";
+                $result = mysqli_query($this->db, $insertSql);
+
+                $respuesta = [
+                    'error' => !$result,
+                    'msg' => $result ? 'Archivo insertado correctamente' : 'Error al insertar: ' . mysqli_error($this->db),
+                    'url' => $rutaFinal,
+                    'sql' => $insertSql,
+                    'insertado' => true,
+                    'subido' => $subido
+                ];
+            }
+
+            return json_encode($respuesta);
+        } else {
+            return json_encode([
+                'error' => true,
+                'msg' => 'Error al recibir el documento',
+                'resultado' => ''
+            ]);
+        }
     }
 
 }

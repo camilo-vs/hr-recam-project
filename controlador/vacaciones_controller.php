@@ -87,4 +87,13 @@ class vacaciones_controller
         echo $this->model->editarSolicitud($data);
     }
 
+    public function subirConstancia(){
+        $data['archivo'] = $_FILES['archivo'];
+        $data['opcion']    = $_POST['opcion'];
+        $data['id']   = $_POST['id'];
+
+        echo $this->model->subirConstancia($data);
+
+    }
+
 }

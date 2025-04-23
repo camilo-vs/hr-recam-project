@@ -4,6 +4,8 @@
     //Funcionalidad al cargar la pagina
     $(document).ready(function () {
         $('#subirContsIngreso').hide();
+        $('#subirContsSalida').hide();
+        $('#subirContsVacaciones').hide();
 
         //Obenter el año entrante
         const anioSiguiente = new Date().getFullYear() + 1;
@@ -18,7 +20,8 @@
                 $('#editFormSI').prop('hidden', false);
                 $('#genButtonI').attr('hidden', true);
                 $('#editarSI').attr('hidden', true);
-
+                $('#doc_formato').attr('src', row.url_doc);
+                $('#doc_formato_vac').attr('src', '');
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButtonSal').attr('hidden', false);
                     $('#subirContsIngreso').hide();
@@ -69,8 +72,11 @@
                 $('input[name="labelDateRequired"]').val(convertToDateTimeLocal(row.required_date));
                 $('#editFormSI').prop('hidden', false);
                 $('#editarSI').attr('hidden', true);
+                $('#doc_formato').attr('src', row.url_doc);
+                $('#doc_formato_vac').attr('src', '');
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButtonSal').attr('hidden', false);
+                    $('#subirContsSalida').hide();
                     if (row.estado === 'PROCESO') {
                         $('#genButtonI').attr('hidden', true);
                         $('#genButtonS').attr('hidden', false);
@@ -79,6 +85,7 @@
                         $('#cambiarEstadoR').linkbutton('disable');
                     }
                 } else {
+                    $('#subirContsSalida').show();
                     $('#editButtonSal').attr('hidden', true);
                     $('#cambiarEstadoR').linkbutton('disable');
                 }
@@ -118,8 +125,10 @@
                 $('select[name="labelTurno"]').val(row.work_shift, 10);
                 $('#editFormVac').prop('hidden', false);
                 $('#genButton').attr('hidden', true);
-
+                $('#doc_formato').attr('src', '');
+                $('#doc_formato_vac').attr('src', row.url_doc);
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
+                    $('#subirContsVacaciones').hide();
                     $('#editButton').attr('hidden', false);
                     if (row.estado === 'PROCESO') {
                         $('#genButton').attr('hidden', false);
@@ -128,6 +137,7 @@
                         $('#bajaButton').linkbutton('disable');
                     }
                 } else {
+                    $('#subirContsVacaciones').show();
                     $('#editButton').attr('hidden', true);
                     $('#bajaButton').linkbutton('disable');
                 }
@@ -1313,12 +1323,15 @@
         } else {
             var employee_number = row.employee_number_id;
             $('#subirContsIngreso').hide();
+            $('#subirContsSalida').hide();
+            $('#subirContsVacaciones').hide();
+
             $('#bajaButton').linkbutton('disable');
             $('#cambiarEstadoI').linkbutton('disable');
             $('#cambiarEstadoR').linkbutton('disable');
             switch (index) {
                 case 0:
-                    tabS(employee_number, null);
+                    tabI(employee_number, null);
                     $('#editFormSI').prop('hidden', true);
                     $('#editFormVac').prop('hidden', true);
                     $('input[name="labelDateRequired"]').prop("disabled", true);
@@ -1330,7 +1343,7 @@
                     $('#userDialog').dialog('close');
                     break;
                 case 1:
-                    tabI(employee_number, null);
+                    tabS(employee_number, null);
                     $('#editFormSI').prop('hidden', true);
                     $('#editFormVac').prop('hidden', true);
                     $('input[name="labelDateRequired"]').prop("disabled", true);
@@ -1360,31 +1373,47 @@
     }
 
     function handleFileUpload(file, opcion) {
-        if (!file) return;
-        let formData = new FormData();
-        formData.append("archivo", file);
-
+        var id = 0;
         if (opcion == 0) {
-
-        } else if (opcion == 1) {
-
-        } else {
-
+            var row = $('#ingresoTable').datagrid('getSelected');
+            id = row.request_id;
+        }else if (opcion == 1){
+            var row = $('#salidaTable').datagrid('getSelected');
+            id = row.request_id;
+        }else{
+            var row = $('#userTable2').datagrid('getSelected');
+            id = row.request_vacation_id;
         }
 
+        if (!file) return;
+
+        if (file.type !== "application/pdf") {
+            $.messager.alert('Error', 'Solo se permiten archivos PDF.');
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("archivo", file);
+        formData.append("opcion", opcion);
+        formData.append("id", id);
+
         $.ajax({
-            url: 'subir_archivo.php', // Cambia esto por tu endpoint
+            url: 'index.php?c=vacaciones&m=subirConstancia', // Cambia esto por tu endpoint
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
             success: function (response) {
+                var responseData = JSON.parse(response);
+                if(opcion == 2){
+                    $('#doc_formato_vac').attr('src', responseData.url + '?t=' + new Date().getTime());
+                }else{
+                    $('#doc_formato').attr('src', responseData.url + '?t=' + new Date().getTime());
+                } 
                 $.messager.alert('Éxito', 'Archivo subido correctamente');
-                console.log(response);
             },
             error: function (xhr) {
                 $.messager.alert('Error', 'Hubo un problema al subir el archivo');
-                console.error(xhr.responseText);
             }
         });
     }
@@ -1512,6 +1541,7 @@
                                         <th data-options="field:'request_id',width:50" hidden>#</th>
                                         <th data-options="field:'type_request',width:50" hidden>#</th>
                                         <th data-options="field:'employee_number',width:50" hidden>#</th>
+                                        <th data-options="field:'url_doc',width:50" hidden>#</th>
                                         <th data-options="field:'employee_name',width:220">Nombre</th>
                                         <th data-options="field:'estado',width:90" align="center">Estado</th>
                                         <th data-options="field:'required_date',width:150">Dia y hora solicitados</th>
@@ -1530,7 +1560,7 @@
                                     id="subirContsIngreso">
                                     Subir Archivo
                                 </a>
-                                <input type="file" id="fileInputIngreso" style="display: none;" accept=".pdf" 
+                                <input type="file" id="fileInputIngreso" style="display: none;" accept=".pdf"
                                     onchange="handleFileUpload(this.files[0],0)" />
                             </div>
                         </div>
@@ -1542,6 +1572,7 @@
                                         <th data-options="field:'request_id',width:50" hidden>#</th>
                                         <th data-options="field:'type_request',width:50" hidden>#</th>
                                         <th data-options="field:'employee_number',width:50" hidden>#</th>
+                                        <th data-options="field:'url_doc',width:50" hidden>#</th>
                                         <th data-options="field:'employee_name',width:220">Nombre</th>
                                         <th data-options="field:'estado',width:90" align="center">Estado</th>
                                         <th data-options="field:'required_date',width:150">Dia y hora solicitados</th>
@@ -1559,8 +1590,8 @@
                                     onclick="document.getElementById('fileInputSalida').click();" id="subirContsSalida">
                                     Subir Archivo
                                 </a>
-                                <input type="file" id="fileInputSalida" style="display: none;" accept=".pdf" 
-                                    onchange="handleFileUpload(this.files[0],0)" />
+                                <input type="file" id="fileInputSalida" style="display: none;" accept=".pdf"
+                                    onchange="handleFileUpload(this.files[0],1)" />
                             </div>
                         </div>
                         <div id="tabVacaciones" title="Vacaciones" style="display:none;">
@@ -1574,6 +1605,7 @@
                                         <th data-options="field:'finish_date',width:50" hidden>#</th>
                                         <th data-options="field:'work_shift',width:50" hidden>#</th>
                                         <th data-options="field:'employee_number',width:50" hidden>#</th>
+                                        <th data-options="field:'url_doc',width:50" hidden>#</th>
                                         <th data-options="field:'employee_name',width:270">Nombre</th>
                                         <th data-options="field:'estado',width:90" align="center">Estado</th>
                                         <th data-options="field:'days',width:60" align="center">Dias</th>
@@ -1593,8 +1625,8 @@
                                     id="subirContsVacaciones">
                                     Subir Archivo
                                 </a>
-                                <input type="file" id="fileInputVacaciones" style="display: none;" accept=".pdf" 
-                                    onchange="handleFileUpload(this.files[0],0)" />
+                                <input type="file" id="fileInputVacaciones" style="display: none;" accept=".pdf"
+                                    onchange="handleFileUpload(this.files[0],2)" />
                             </div>
                         </div>
                     </div>
@@ -1652,6 +1684,7 @@
                                 <input type="number" class="form-control" name="labelVacationDaysIn" id="vacationDaysIn"
                                     hidden>
                             </div>
+                            <iframe id="doc_formato_vac" src="" width="100%" height="600px"></iframe>
                             <div class="row py-2">
                                 <div class="col-sm-12">
                                     <button type="button" class="btn btn-warning" style="width: 100%;"
@@ -1675,7 +1708,6 @@
                                         plain="true" onclick="editSI()" id="editButtonSal"
                                         style="border: 1px solid black;">Editar solicitud</a>
                                 </div>
-
                             </div>
                             <div class="row py-2">
                                 <input type="hidden" class="form-control" name="labelR" id="editR" readonly disabled>
@@ -1690,6 +1722,7 @@
                                         disabled>
                                 </div>
                             </div>
+                            <iframe id="doc_formato" src="" width="100%" height="600px"></iframe>
                             <div class="row py-2">
                                 <div class="col-sm-12">
                                     <button type="button" class="btn btn-warning" id="editarSI" onclick="updateFormSI()"
