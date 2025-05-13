@@ -6,7 +6,8 @@
         $('#subirContsIngreso').hide();
         $('#subirContsSalida').hide();
         $('#subirContsVacaciones').hide();
-
+        $('#doc_formato_vac').hide();
+        $('#doc_formato').hide();
         //Obenter el año entrante
         const anioSiguiente = new Date().getFullYear() + 1;
         document.getElementById("anioSiguiente").textContent = anioSiguiente;
@@ -20,6 +21,11 @@
                 $('#editFormSI').prop('hidden', false);
                 $('#genButtonI').attr('hidden', true);
                 $('#editarSI').attr('hidden', true);
+                if (row.url_doc != null) {
+                    $('#doc_formato').show();
+                } else {
+                    $('#doc_formato').hide();
+                }
                 $('#doc_formato').attr('src', row.url_doc);
                 $('#doc_formato_vac').attr('src', '');
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
@@ -126,6 +132,11 @@
                 $('#editFormVac').prop('hidden', false);
                 $('#genButton').attr('hidden', true);
                 $('#doc_formato').attr('src', '');
+                if (row.url_doc != null) {
+                    $('#doc_formato_vac').show();
+                } else {
+                    $('#doc_formato_vac').hide();
+                }
                 $('#doc_formato_vac').attr('src', row.url_doc);
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#subirContsVacaciones').hide();
@@ -399,26 +410,52 @@
             return `${meses}`;
         }
         function calcularDiasCorrespondientes(fechaIngreso) {
-            var fechaInicio = moment(fechaIngreso, 'DD/MM/YYYY');
-            var fechaActual = moment();
+            let fechaStr = fechaIngreso;
+            let [fecha, hora] = fechaStr.split(" ");
+            let [dia, mes, anio] = fecha.split("/");
+            let fechaISO = `${anio}-${mes}-${dia}`;
+            let fechaInicial = new Date(fechaISO + 'T00:00:00');
 
-            var años = fechaActual.diff(fechaInicio, 'years');
+            let fechaActual = new Date();
 
-            var diasCorrespondientes = 0;
+            fechaInicial.setHours(0, 0, 0, 0);
+            fechaActual.setHours(0, 0, 0, 0);
+            // Calcular la diferencia en meses
 
-            if (años >= 1 && años <= 6) {
-                diasCorrespondientes = 12 + (años - 1) * 2;
-            } else if (años > 6) {
-                diasCorrespondientes = 22; // Hasta 6 años: 12 + (5 * 2)
-                var aniosExtra = años - 6;
-                diasCorrespondientes += Math.floor(aniosExtra / 5) * 2;
+            let diferenciaMeses =
+                (fechaActual.getFullYear() - fechaInicial.getFullYear()) * 12 +
+                (fechaActual.getMonth() - fechaInicial.getMonth());
+
+            if (fechaActual.getDate() < fechaInicial.getDate()) {
+                diferenciaMeses--; // No cuenta el mes incompleto
             }
+            // Calcular días de vacaciones según las reglas:
+            let diasCorrespondientes = 0;
+
+
+            if (diferenciaMeses >= 8) {
+                // Calcular los años redondeando hacia abajo
+                let diferenciaAnios = Math.floor(diferenciaMeses / 12);
+
+                if (diferenciaAnios >= 1 && diferenciaAnios <= 6) {
+                    diasCorrespondientes = 12 + (diferenciaAnios - 1) * 2;
+                } else if (diferenciaAnios > 6) {
+                    diasCorrespondientes = 22; // Hasta 6 años
+                    let aniosExtra = diferenciaAnios - 6;
+                    diasCorrespondientes += Math.floor(aniosExtra / 5) * 2;
+                } else {
+                    // Aún no ha cumplido el primer año pero ya pasaron 8 meses
+                    diasCorrespondientes = 12;
+                }
+            }
+
 
             return diasCorrespondientes;
         }
 
         $('#userTable').datagrid({
             onSelect: function (index, row) {
+                $('#editFormVac').prop('hidden', true);
                 const checkbox = document.getElementById("switchCheckDefault");
                 checkbox.checked = false;
                 // Filtrar la segunda tabla (userTable2) mostrando solo los registros con el mismo employee_number
@@ -449,20 +486,24 @@
                                 let fechaStr = row.hire_date;
                                 let [fecha, hora] = fechaStr.split(" ");
                                 let [dia, mes, anio] = fecha.split("/");
-                                let fechaISO = `${anio}-${mes}-${dia}T${hora}`;
-                                let fechaInicial = new Date(fechaISO);
+                                let fechaISO = `${anio}-${mes}-${dia}`;
+                                let fechaInicial = new Date(fechaISO + 'T00:00:00');
 
                                 let fechaActual = new Date(); // Fecha de hoy
 
                                 // Normalizar ambas fechas al inicio del día (00:00:00)
                                 fechaInicial.setHours(0, 0, 0, 0);
                                 fechaActual.setHours(0, 0, 0, 0);
-
                                 // Calcular la diferencia en meses
+
                                 let diferenciaMeses =
                                     (fechaActual.getFullYear() - fechaInicial.getFullYear()) * 12 +
                                     (fechaActual.getMonth() - fechaInicial.getMonth());
 
+                                if (fechaActual.getDate() < fechaInicial.getDate()) {
+                                    diferenciaMeses--; // No cuenta el mes incompleto
+                                }
+                                console.log(diferenciaMeses);
                                 // Calcular días de vacaciones según las reglas:
                                 let diasVacaciones = 0;
 
@@ -485,6 +526,7 @@
 
                                 // Calcular los días disponibles después de restar los días solicitados
                                 let diasDisponibles = diasVacaciones - diasSolicitados;
+
                                 if (diasDisponibles == 0 && diferenciaMeses >= 16) {
                                     $('#switch_anio_entrante').show();
                                 }
@@ -518,6 +560,7 @@
                 $('#tt').prop('hidden', false);
             },
             onUnselect: function (index, row) {
+                $('#editFormVac').prop('hidden', true);
                 $('h4[name="vacationDays"]').text("");
                 $('input[name="labelDays"]').prop("disabled", true);
                 $('input[name="labelDateR"]').prop("disabled", true);
@@ -589,7 +632,7 @@
         });
     });
 
-    function tabV(employee_number) {
+    function tabV(employee_number, idTab) {
         var row = $('#userTable').datagrid('getSelected');
         var employee_number = row.employee_number_id;
         var switchElement = document.getElementById("switchCheckDefault");
@@ -614,19 +657,33 @@
                     let fechaStr = row.hire_date;
                     let [fecha, hora] = fechaStr.split(" ");
                     let [dia, mes, anio] = fecha.split("/");
-                    let fechaISO = `${anio}-${mes}-${dia}T${hora}`;
-                    let fechaInicial = new Date(fechaISO);
+                    let fechaISO = `${anio}-${mes}-${dia}`;
+                    let fechaInicial = new Date(fechaISO + 'T00:00:00');
+                    let fechaActual;
+                    if (switchElement.checked) {
+                        let anioSiguiente = new Date().getFullYear() + 1;
+                        fechaActual = new Date(`${anioSiguiente}-01-01T00:00:00`);
+                    } else {
+                        fechaActual = new Date(); // Fecha actual real
+                    }
 
-                    let fechaActual = new Date(); // Fecha de hoy
+                    if (idTab != null) {
+                        var rowSolicitud = $('#ingresoTable').datagrid('getSelected');
+                        $('#userTable2').datagrid('selectRow', idTab);
+                    }
 
                     // Normalizar ambas fechas al inicio del día (00:00:00)
-                    fechaInicial.setHours(0, 0, 0, 0);
                     fechaActual.setHours(0, 0, 0, 0);
                     // Calcular la diferencia en meses
+
                     let diferenciaMeses =
                         (fechaActual.getFullYear() - fechaInicial.getFullYear()) * 12 +
                         (fechaActual.getMonth() - fechaInicial.getMonth());
 
+                    if (fechaActual.getDate() < fechaInicial.getDate()) {
+                        diferenciaMeses--; // No cuenta el mes incompleto
+                    }
+                    console.log(diferenciaMeses);
                     // Calcular días de vacaciones según las reglas:
                     let diasVacaciones = 0;
 
@@ -648,7 +705,7 @@
 
                     // Calcular los días disponibles después de restar los días solicitados
                     let diasDisponibles = diasVacaciones - diasSolicitados;
-                    console.log(diasDisponibles, diferenciaMeses);
+
                     if (diasDisponibles == 0 && diferenciaMeses >= 16) {
                         $('#switch_anio_entrante').show();
                     }
@@ -784,7 +841,7 @@
 
         var index = $('#estadoSelect').val();
         if (index == '2') {
-            cambio = 'APROVADA';
+            cambio = 'APROBADA';
             estado = 2;
         } else {
             cambio = 'RECHAZADA';
@@ -805,11 +862,14 @@
                         if (respuesta.error === true) {
                             $.messager.alert('Error', respuesta.msg, 'error');
                         } else {
-                            tabV(employee_number);
+                            tabV(employee_number, null);
                             if (respuesta.cambio) {
                                 $('#genButton').attr('hidden', true)
                                 $('#genButtonI').attr('hidden', true);
                                 $('#genButtonS').attr('hidden', true);
+                                $('#bajaButton').linkbutton('disable');
+                                $('#editButton').linkbutton('disable');
+
                                 $('#userDialogEstado').dialog('close');
                                 $('#cambiarEstadoR').linkbutton('disable');
                                 $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
@@ -830,7 +890,7 @@
 
         var index = $('#estadoSelect').val();
         if (index == '2') {
-            cambio = 'APROVADA';
+            cambio = 'APROBADA';
             estado = 2;
         } else {
             cambio = 'RECHAZADA';
@@ -888,15 +948,31 @@
             return;
         }
 
-        // Function to check if a date is a working day (Monday to Saturday)
+        // Feriados por año
+        const feriadosPorAnio = {
+            2025: [
+                '2025-01-01', // Año Nuevo
+                '2025-02-03', // Día de la Constitución (trasladado)
+                '2025-03-17', // Natalicio de Benito Juárez (trasladado)
+                '2025-05-01', // Día del Trabajo
+                '2025-09-16', // Día de la Independencia
+                '2025-11-17', // Día de la Revolución Mexicana (trasladado)
+                '2025-12-25',  // Navidad
+                '2026-01-01'  // Año Nuevo
+            ],
+        };
+
+        // Verifica si una fecha es laboral (no domingo ni feriado)
         function isWorkingDay(date) {
-            return date.day() !== 0; // 0 is Sunday
+            const year = date.year();
+            const feriados = feriadosPorAnio[year] || [];
+            return date.day() !== 0 && !feriados.includes(date.format('YYYY-MM-DD'));
         }
 
-        // Calculate end date precisely, counting the start date as day 1
+        // Calcular fecha final considerando días laborables
         function calculatePreciseEndDate(startDate, totalWorkingDays) {
             let currentDate = moment(startDate);
-            let workingDaysCount = 1; // Start counting from the first day
+            let workingDaysCount = isWorkingDay(currentDate) ? 1 : 0;
 
             while (workingDaysCount < totalWorkingDays) {
                 currentDate.add(1, 'days');
@@ -904,29 +980,31 @@
                     workingDaysCount++;
                 }
             }
-
             return currentDate;
         }
 
-        // Calculate end date
         let endDate = calculatePreciseEndDate(startDate, days);
+
+        // Si turno es 1 o 2 y termina en sábado, mover a lunes
+        if ((turno === '1' || turno === '2') && endDate.day() === 6) {
+            endDate.add(2, 'days');
+        }
+
         endDateInput.val(endDate.format('YYYY-MM-DD'));
 
-        // Calculate back to work date
+        // Calcular fecha de reincorporación
         let backDate = moment(endDate).add(1, 'days');
-
-        // Adjust back to work date
         while (!isWorkingDay(backDate)) {
             backDate.add(1, 'days');
         }
 
-        // Special rule: if back date is Saturday and turno is vespertino, move to Monday
         if (turno === '1' && backDate.day() === 6) {
-            backDate.add(2, 'days'); // Move to Monday
+            backDate.add(2, 'days');
         }
 
         backDateInput.val(backDate.format('YYYY-MM-DD'));
     }
+
 
     function editUser() {
         $('input[name="labelDays"]').prop("disabled", false);
@@ -1024,12 +1102,12 @@
 
     function updateForm() {
         var row = $('#userTable2').datagrid('getSelected');
-        employee_number = row.employee_number;
+
         if (!row) {
-            $.messager.alert('Error', 'Por favor selecciona un usuario para actualizar.', 'error');
+            $.messager.alert('Error', 'Por favor seleccionar la solicitud para actualizar.', 'error');
             return;
         }
-
+        employee_number = row.employee_number;
         var index = $('#userTable2').datagrid('getRowIndex', row);
 
         // Se comparan todos los campos relevantes
@@ -1041,6 +1119,16 @@
             row.work_shift === $('#editTurno')
         ) {
             $.messager.alert('Info', 'No se detecta ningún cambio.', 'info');
+            return;
+        }
+        let diasDisponibles = parseInt($('h4[name="vacationDays"]').text());
+
+        // Obtener el valor ingresado por el usuario
+        let diasEditados = parseInt($('#editDays').val());
+
+        // Comparar
+        if (diasEditados > diasDisponibles) {
+            $.messager.alert('Error', 'No puedes solicitar más días de los disponibles.', 'info');
             return;
         }
 
@@ -1067,10 +1155,10 @@
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
                     if (respuesta.cambio) {
-                        tabV(employee_number);
+                        tabV(employee_number, index);
                         // Actualiza la fila en la tabla con los nuevos datos
                         $('#userDialog').dialog('close');
-                        $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
+                        $.messager.alert('Se realizó la petición', '¡La solicitud fue actualizada correctamente!', 'info');
                         $('input[name="labelDays"]').prop("disabled", true);
                         $('input[name="labelDateR"]').prop("disabled", true);
                         $('input[name="labelDateC"]').prop("disabled", true);
@@ -1260,7 +1348,7 @@
                 return 'background-color: black; color: white; font-weight: bold;';
             } else if (value === 'PROCESO') {
                 return 'background-color: orange; color: white; font-weight: bold;';
-            } else if (value === 'APROVADA') {
+            } else if (value === 'APROBADA') {
                 return 'background-color: green; color: white; font-weight: bold;';
             } else if (value === 'RECHAZADA') {
                 return 'background-color: red; color: white; font-weight: bold;';
@@ -1281,7 +1369,7 @@
                 return 'background-color: black; color: white; font-weight: bold;';
             } else if (value === 'PROCESO') {
                 return 'background-color: orange; color: white; font-weight: bold;';
-            } else if (value === 'APROVADA') {
+            } else if (value === 'APROBADA') {
                 return 'background-color: green; color: white; font-weight: bold;';
             } else if (value === 'RECHAZADA') {
                 return 'background-color: red; color: white; font-weight: bold;';
@@ -1302,7 +1390,7 @@
                 return 'background-color: black; color: white; font-weight: bold;';
             } else if (value === 'PROCESO') {
                 return 'background-color: orange; color: white; font-weight: bold;';
-            } else if (value === 'APROVADA') {
+            } else if (value === 'APROBADA') {
                 return 'background-color: green; color: white; font-weight: bold;';
             } else if (value === 'RECHAZADA') {
                 return 'background-color: red; color: white; font-weight: bold;';
@@ -1355,7 +1443,7 @@
                     $('#userDialog').dialog('close');
                     break;
                 case 2:
-                    tabV(employee_number);
+                    tabV(employee_number, null);
                     $('#editFormSI').prop('hidden', true);
                     $('#editFormVac').prop('hidden', true);
                     $('input[name="labelDateRequired"]').prop("disabled", true);
@@ -1377,10 +1465,10 @@
         if (opcion == 0) {
             var row = $('#ingresoTable').datagrid('getSelected');
             id = row.request_id;
-        }else if (opcion == 1){
+        } else if (opcion == 1) {
             var row = $('#salidaTable').datagrid('getSelected');
             id = row.request_id;
-        }else{
+        } else {
             var row = $('#userTable2').datagrid('getSelected');
             id = row.request_vacation_id;
         }
@@ -1405,11 +1493,13 @@
             contentType: false,
             success: function (response) {
                 var responseData = JSON.parse(response);
-                if(opcion == 2){
+                if (opcion == 2) {
+                    $('#doc_formato_vac').show();
                     $('#doc_formato_vac').attr('src', responseData.url + '?t=' + new Date().getTime());
-                }else{
+                } else {
+                    $('#doc_formato').show();
                     $('#doc_formato').attr('src', responseData.url + '?t=' + new Date().getTime());
-                } 
+                }
                 $.messager.alert('Éxito', 'Archivo subido correctamente');
             },
             error: function (xhr) {
@@ -1422,7 +1512,7 @@
         const switchElement = document.getElementById("switchCheckDefault");
         var row = $('#userTable').datagrid('getSelected');
         var employee_number = row.employee_number_id;
-        tabV(employee_number);
+        tabV(employee_number, null);
         $('#solicitarVac').removeAttr('hidden');
         if (switchElement.checked) {
             $('#solicitarVac').linkbutton('enable');
@@ -1652,7 +1742,7 @@
                                 </div>
                                 <div class="col-sm-4">
                                     <p class="mb-0">Dias solicitados</p>
-                                    <input type="text" class="form-control" id="editDays" name="labelDays"
+                                    <input type="number" class="form-control" id="editDays" name="labelDays"
                                         onchange="calculateEndDate()" disabled>
                                 </div>
                                 <div class="col-sm-4">
@@ -1661,6 +1751,7 @@
                                         onchange="calculateEndDate()" disabled>
                                         <option value="0">Matutino</option>
                                         <option value="1">Vespertino</option>
+                                        <option value="2">Mixto</option>
                                     </select>
                                 </div>
                             </div>
@@ -1753,7 +1844,7 @@
         <div class="form-group py-3">
             <label for="estadoSelect">Cambiar a:</label>
             <select id="estadoSelect" name="estadoSelect" class="form-control">
-                <option value="2">APROVADA</option>
+                <option value="2">APROBADA</option>
                 <option value="3">RECHAZADA</option>
             </select>
         </div>

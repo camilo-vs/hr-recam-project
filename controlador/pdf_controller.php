@@ -3,9 +3,11 @@ namespace App\Controllers;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 class pdf_controller
 {
-
     public function formatearFecha($fecha)
     {
         if (empty($fecha)) {
@@ -29,6 +31,27 @@ class pdf_controller
 
         return ''; // Si ningún formato fue válido
     }
+
+    private function generarPdfConDompdf($html, $nombreArchivo)
+    {
+        // Configurar opciones de DomPDF
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('defaultFont', 'Arial');
+        
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        
+        // Enviar el PDF al navegador
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="'.$nombreArchivo.'"');
+        echo $dompdf->output();
+        exit;
+    }
+
     public function generarPDF()
     {
         // Recoger datos del POST
@@ -39,6 +62,7 @@ class pdf_controller
             is_numeric($datos['dias_disponibles']) && is_numeric($datos['dias_solicitados'])) {
             $dias_disponibles_restantes = $datos['dias_disponibles'] - $datos['dias_solicitados'];
         }
+        
         // Extraer datos con valores por defecto
         $datosCompletos = [
             'requestId' => $datos['id'] ?? '',
@@ -48,7 +72,7 @@ class pdf_controller
 
             'nombre_empleado' => $datos['nombre_empleado'] ?? '',
             'no_empleado' => $datos['no_empleado'] ?? '',
-            'departamento' => $datos['departamento'] ?? '',
+            'departamento' =>  strtoupper($datos['departamento'] ?? ''),
             'tiempo_servicio_anio' => $datos['tiempo_servicio_anio'] ?? '',
             'tiempo_servicio_mes' => $datos['tiempo_servicio_mes'] ?? '',
 
@@ -71,10 +95,7 @@ class pdf_controller
             'fecha_regreso_dia' => $datos['fecha_regreso_dia'] ?? '',
             'fecha_regreso_mes' => $datos['fecha_regreso_mes'] ?? '',
             'fecha_regreso_anio' => $datos['fecha_regreso_anio'] ?? ''
-            
         ];
-
-        var_dump($datosCompletos['fecha_ingreso']);
 
         // Capturar HTML de la plantilla
         ob_start();
@@ -82,29 +103,11 @@ class pdf_controller
         include __DIR__ . '/../vistas/PDF/pdf.html';
         $html = ob_get_clean();
 
-        // Guardar HTML en un archivo temporal
-        $htmlPath = __DIR__ . '/../vistas/PDF/tempPDF/temp.html';
-        file_put_contents($htmlPath, $html);
-
-        // Ruta de salida del PDF
-        $pdfPath = __DIR__ . '/../vistas/PDF/generatedPDF/solicitud_vacaciones' . $datosCompletos['no_empleado'] . '-' . $datosCompletos['fecha_solicitud'] . '.pdf';
-
-
-        // Ejecutar Puppeteer con Node.js para generar el PDF
-        $script = __DIR__ . '/../js/generate_pdf.js';
-        $command = "node \"$script\" \"$htmlPath\" \"$pdfPath\"";
-        exec($command, $output, $returnVar);
-
-        // Verificar si el PDF se generó correctamente
-        if ($returnVar !== 0 || !file_exists($pdfPath)) {
-            die("Error al generar el PDF. Salida: " . implode("\n", $output));
-        }
-
-        // Enviar el PDF al navegador
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="solicitud_vacaciones.pdf"');
-        readfile($pdfPath);
-        exit;
+        // Generar nombre del archivo
+        $nombreArchivo = 'solicitud_vacaciones_' . $datosCompletos['no_empleado'] . '.pdf';
+        
+        // Generar PDF con DomPDF
+        $this->generarPdfConDompdf($html, $nombreArchivo);
     }
 
     public function generarPDFI()
@@ -118,7 +121,7 @@ class pdf_controller
             'fecha_solicitada' => $this->formatearFecha($datos['fecha_solicitada']) ?? '',
             'nombre_empleado' => $datos['nombre_empleado'] ?? '',
             'no_empleado' => $datos['no_empleado'] ?? '',
-            'departamento' => $datos['departamento'] ?? ''
+            'departamento' => strtoupper($datos['departamento'] ?? '')
         ];
 
         // Capturar HTML de la plantilla
@@ -127,28 +130,11 @@ class pdf_controller
         include __DIR__ . '/../vistas/PDF/pdfI.html';
         $html = ob_get_clean();
 
-        // Guardar HTML en un archivo temporal
-        $htmlPath = __DIR__ . '/../vistas/PDF/tempPDF/tempI.html';
-        file_put_contents($htmlPath, $html);
-
-        // Ruta de salida del PDF
-        $pdfPath = __DIR__ . '/../vistas/PDF/generatedPDF/solicitud_I_' . $datosCompletos['no_empleado'] . '-' . $datosCompletos['fecha_solicitud'] . '.pdf';
-
-        // Ejecutar Puppeteer con Node.js para generar el PDF
-        $script = __DIR__ . '/../js/generate_pdf.js';
-        $command = "node \"$script\" \"$htmlPath\" \"$pdfPath\"";
-        exec($command, $output, $returnVar);
-
-        // Verificar si el PDF se generó correctamente
-        if ($returnVar !== 0 || !file_exists($pdfPath)) {
-            die("Error al generar el PDF. Salida: " . implode("\n", $output));
-        }
-
-        // Enviar el PDF al navegador
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="solicitud_I.pdf"');
-        readfile($pdfPath);
-        exit;
+        // Generar nombre del archivo
+        $nombreArchivo = 'solicitud_I_' . $datosCompletos['no_empleado'] . '.pdf';
+        
+        // Generar PDF con DomPDF
+        $this->generarPdfConDompdf($html, $nombreArchivo);
     }
 
     public function generarPDFS()
@@ -162,7 +148,7 @@ class pdf_controller
             'fecha_solicitada' => $this->formatearFecha($datos['fecha_solicitada']) ?? '',
             'nombre_empleado' => $datos['nombre_empleado'] ?? '',
             'no_empleado' => $datos['no_empleado'] ?? '',
-            'departamento' => $datos['departamento'] ?? ''
+            'departamento' => strtoupper($datos['departamento'] ?? '')
         ];
 
         // Capturar HTML de la plantilla
@@ -171,29 +157,10 @@ class pdf_controller
         include __DIR__ . '/../vistas/PDF/pdfS.html';
         $html = ob_get_clean();
 
-        // Guardar HTML en un archivo temporal
-        $htmlPath = __DIR__ . '/../vistas/PDF/tempPDF/tempS.html';
-        file_put_contents($htmlPath, $html);
-
-        // Ruta de salida del PDF
-        $pdfPath = __DIR__ . '/../vistas/PDF/generatedPDF/solicitud_S_' . $datosCompletos['no_empleado'] . '-' . $datosCompletos['fecha_solicitud'] . '.pdf';
-
-        // Ejecutar Puppeteer con Node.js para generar el PDF
-        $script = __DIR__ . '/../js/generate_pdf.js';
-        $command = "node \"$script\" \"$htmlPath\" \"$pdfPath\"";
-        exec($command, $output, $returnVar);
-
-        // Verificar si el PDF se generó correctamente
-        if ($returnVar !== 0 || !file_exists($pdfPath)) {
-            die("Error al generar el PDF. Salida: " . implode("\n", $output));
-        }
-
-        // Enviar el PDF al navegador
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="solicitud_S.pdf"');
-        readfile($pdfPath);
-        exit;
+        // Generar nombre del archivo
+        $nombreArchivo = 'solicitud_S_' . $datosCompletos['no_empleado'] . '.pdf';
+        
+        // Generar PDF con DomPDF
+        $this->generarPdfConDompdf($html, $nombreArchivo);
     }
 }
-
-?>

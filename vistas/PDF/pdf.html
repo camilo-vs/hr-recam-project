@@ -1,460 +1,307 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Solicitud de Vacaciones</title>
     <style>
-      body {
-        margin: 40px;
-        font-family: Arial, Helvetica, sans-serif;
-        font-weight: lighter;
-        font-size: 12px;
-        letter-spacing: -0.6px;
-      }
-
-      .container {
-        width: 95%;
-        margin: auto;
-        border: 2px solid black;
-        padding: 20px;
-      }
-
-      .title {
-        text-align: center;
-        font-weight: bold;
-        font-size: 15px;
-        margin-left: -65px;
-      }
-
-      .section {
-        margin-top: 20px;
-        padding-bottom: 10px;
-      }
-
-      .row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-      }
-
-      .header-content {
-        display: inline-block;
-        align-items: center;
-        justify-content: start;
-        gap: 30px;
-      }
-
-      .fill {
-        border: solid 2px;
-        width: 90px;
-        height: 15px;
-        text-align: center;
-      }
-      .fill_fecha {
-        border: solid 2px;
-        width: 30px;
-        height: 15px;
-        text-align: center;
-      }
-      .line {
-        width: 370px;
-        border-bottom: 2px solid black;
-        margin-left: -40px;
-      }
-
-      .fill-date .fill {
-        border: solid 2px;
-        width: 100px;
-        height: 18px;
-        margin-bottom: -10px;
-        margin-top: -8px;
-      }
-
-      .fill-date span {
-        word-spacing: 10px;
-        margin-left: 4px;
-        display: inline;
-      }
-
-      .img-logo {
-        height: 30px;
-        width: 150px;
-      }
-
-      .label-logo {
-        margin-top: 1px;
-      }
-
-      .specs {
-        margin-bottom: -14px;
-        font-size: 10px;
-      }
-
-      .header {
-        margin: -13px;
-      }
-
-      .text-header {
-        align-items: center;
-        margin-top: -40px;
-        margin-left: 150px;
-        font-size: 10px;
-        margin-bottom: 10px;
-      }
-
-      .text-header2 {
-        align-items: center;
-        margin-top: 3px;
-        margin-left: 170px;
-        font-size: 10px;
-        margin-bottom: 10px;
-      }
-
-      .divider {
-        background-color: rgb(196, 196, 196);
-        text-align: center;
-        color: black;
-        font-weight: bold;
-        width: 100%;
-        padding-left: 20px;
-        padding-right: 20px;
-        margin-left: -20px;
-        margin-top: 13px;
-      }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            border: 2px solid #000;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        td, th {
+            padding: 5px;
+            font-size: 8px;
+            vertical-align: top;
+        }
+        .title {
+            font-weight: bold;
+            font-size: 15px;
+            text-align: center;
+        }
+        .fill {
+            border: 1px solid #000;
+            height: 15px;
+            text-align: center;
+            padding: 2px;
+        }
+        .fill-small {
+            width: 30px;
+        }
+        .fill-medium {
+            width: 90px;
+        }
+        .line {
+            border-bottom: 1px solid #000;
+            min-width: 100px;
+        }
+        .divider {
+            background-color: #C4C4C4;
+            text-align: center;
+            font-weight: bold;
+            padding: 3px 0;
+            margin: 10px -15px;
+        }
+        .signature-box {
+            border: 1px solid #000;
+            height: 70px;
+            position: relative;
+        }
+        .signature-label {
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+        }
+        .text-small {
+            font-size: 10px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .logo {
+            width: 150px;
+        }
+        .date-label {
+            font-size: 8px;
+            text-align: center;
+            margin-top: 3px;
+        }
+        p,strong{
+          font-size: 8px;
+        }
     </style>
-  </head>
-
-  <body>
+</head>
+<body>
     <div class="container">
-      <div class="header">
-        <div class="row">
-          <div class="img-logo">
-            <img
-              src="https://recamcortelaser.com/wp-content/uploads/2025/04/logo_licen.png"
-              alt=""
-              width="200px"
-            />
-          </div>
-          <div class="title">SOLICITUD DE VACACIONES</div>
-          <div class="conainer-rev">
-            <div class="row">
-              <label class="specs">CÓDIGO: R-SRH-020</label>
-            </div>
-            <div class="row">
-              <label class="specs">REV: 01</label>
-            </div>
-            <div class="row">
-              <label class="specs">EMISIÓN: 16-03-2023</label>
-            </div>
-          </div>
-        </div>
-      </div>
+        <!-- Encabezado -->
+        <table>
+            <tr>
+                <td width="30%">
+                  <img
+                  src="https://recamcortelaser.com/wp-content/uploads/2025/04/logo_licen.png"
+                  alt=""
+                  width="200px"
+                />
+                </td>
+                <td width="40%" class="text-center">
+                    <div class="title">SOLICITUD DE VACACIONES</div>
+                </td>
+                <td width="30%" class="text-right">
+                    <div>CÓDIGO: R-SRH-020</div>
+                    <div>REV: 01</div>
+                    <div>EMISIÓN: 16-03-2023</div>
+                </td>
+            </tr>
+        </table>
 
-      <div class="section">
-        <div class="row">
-          <label class="label-logo" style="font-size: 10.5px"
-            >FECHA DE SOLICITUD:</label
-          >
-        </div>
-        <div class="header-content">
-          <div style="display: flex; margin-top: 10px; margin-left: 5px">
-            <div class="fill-date">
-              <div class="row" style="display: flex">
-                <div class="fill_fecha" style="text-align: center">
-                  <?=$fecha_solicitud_dia?><br />
-                  <span style="display: inline-block; margin-top: 6px">DD</span>
-                </div>
-                <div class="fill_fecha" style="text-align: center">
-                  <?=$fecha_solicitud_mes?><br />
-                  <span style="display: inline-block; margin-top: 6px">MM</span>
-                </div>
-                <div class="fill_fecha" style="text-align: center">
-                  <?=$fecha_solicitud_anio?><br />
-                  <span style="display: inline-block; margin-top: 6px"
-                    >AAAA</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Fecha de solicitud -->
+        <table style="margin-top: 15px;" width="100%">
+          <tr>
+              <td width="25%">
+                  <strong>FECHA DE SOLICITUD:</strong>
+                  <table width="100%">
+                      <tr>
+                          <td class="fill fill-small"><?= $fecha_solicitud_dia ?></td>
+                          <td class="fill fill-small"><?= $fecha_solicitud_mes ?></td>
+                          <td class="fill fill-small"><?= $fecha_solicitud_anio ?></td>
+                      </tr>
+                      <tr>
+                          <td class="date-label">DD</td>
+                          <td class="date-label">MM</td>
+                          <td class="date-label">AAAA</td>
+                      </tr>
+                  </table>
+              </td>
+              <td class="text-small text-center">
+                  <p>POR EL PRESENTE EXPRESO MI CONFORMIDAD DE SOLICITAR Y GOZAR MIS VACACIONES DE ACUERDO A LO QUE</p>
+                  <p>ESTABLECE EL ARTÍCULO 76 DE LA LEY FEDERAL DEL TRABAJO, CONSIDERANDO LOS SIGUIENTES DATOS:</p>
+              </td>
+          </tr>
+      </table>
+      
 
-          <p class="text-header">
-            POR EL PRESENTE EXPRESO MI CONFORMIDAD DE SOLICITAR Y GOZAR MIS
-            VACACIONES DE ACUERDO A LO QUE
-          </p>
-          <p class="text-header2">
-            ESTABLECE EL ARTICULO 76 DE LA LEY FEDERAL DEL TRABAJO, CONSIDERANDO
-            LO SIGUIENTES DATOS:
-          </p>
-        </div>
-      </div>
+        <div class="divider">INFORMACIÓN DEL SOLICITANTE</div>
 
-      <div class="divider">INFORMACIÓN DEL SOLICITANTE</div>
+        <!-- Información del solicitante -->
+        <table >
+            <tr>
+                <td width="15%">No. DE EMPLEADO:</td>
+                <td width="20%" class="fill fill-medium"><?= $no_empleado ?></td>
+                <td width="15%">NOMBRE DEL EMPLEADO:</td>
+                <td width="50%" class="line"><?= $nombre_empleado ?></td>
+            </tr>
+            <tr>
+                <td>DEPARTAMENTO:</td>
+                <td colspan="3" class="line"><?= $departamento ?></td>
+            </tr>
+        </table>
 
-      <div class="section">
-        <div class="row">
-          <label>No. DE EMPLEADO:</label> <label>NOMBRE DEL EMPLEADO:</label>
-          <div class="line">
-            <?=$nombre_empleado?>
-          </div>
-        </div>
-        <div class="row">
-          <div class="fill">
-            <?=$requestId?>
-          </div>
-          <label style="margin-right: -50px">DEPARTAMENTO:</label>
-          <div class="line">
-            <?=$departamento?>
-          </div>
-        </div>
-        <div class="row"></div>
-      </div>
+        <table style="margin-top: 10px;">
+            <tr>
+                <td width="7%">FECHA DE INGRESO:</td>
+                <td width="25%">
+                    <table>
+                        <tr>
+                            <td class="fill fill-small"><?= $fecha_ingreso_dia ?></td>
+                            <td class="fill fill-small"><?= $fecha_ingreso_mes ?></td>
+                            <td class="fill fill-small"><?= $fecha_ingreso_anio ?></td>
+                        </tr>
+                        <tr>
+                            <td class="date-label">DD</td>
+                            <td class="date-label">MM</td>
+                            <td class="date-label">AAAA</td>
+                        </tr>
+                    </table>
+                </td>
+                <td width="5%"></td>
+                <td width="20%">TIEMPO DE SERVICIO:</td>
+                <td width="40%">
+                    <table>
+                        <tr>
+                            <td width="50%" class="fill fill-medium"><?= $tiempo_servicio_anio ?></td>
+                            <td width="50%" class="fill fill-medium"><?= $tiempo_servicio_mes ?></td>
+                        </tr>
+                        <tr>
+                            <td class="date-label">AÑOS</td>
+                            <td class="date-label">MESES</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>DÍAS QUE CORRESPONDEN:</td>
+                <td class="fill fill-medium"><?= $dias_corresponden ?></td>
+                <td width="5%"></td>
+                <td>DÍAS DISPONIBLES:</td>
+                <td class="fill fill-medium"><?= $dias_disponibles ?></td>
+            </tr>
+        </table>
 
-      <div class="section" style="margin-top: -10px">
-        <div class="row" style="margin-left: 80px">
-          <label>FECHA DE INGRESO:</label>
-          <div class="fill-date">
-            <div class="row" style="display: flex">
-              <div class="fill_fecha" style="text-align: center">
-                <?=$fecha_ingreso_dia?><br />
-                <span style="display: inline-block; margin-top: 6px">DD</span>
-              </div>
-              <div class="fill_fecha" style="text-align: center">
-                <?=$fecha_ingreso_mes?><br />
-                <span style="display: inline-block; margin-top: 6px">MM</span>
-              </div>
-              <div class="fill_fecha" style="text-align: center">
-                <?=$fecha_ingreso_anio?><br />
-                <span style="display: inline-block; margin-top: 6px">AAAA</span>
-              </div>
-            </div>
-          </div>
-          <label>TIEMPO DE SERIVICIO:</label>
-          <div class="fill-date">
-            <div class="row">
-              <div class="fill">
-                <?=$tiempo_servicio_anio?>
-              </div>
-              <div class="fill">
-                <?=$tiempo_servicio_mes?>
-              </div>
-            </div>
-            <div class="row">
-              <span style="margin-left: 20%">AÑOS</span>
-              <span style="margin-right: 17%">MESES</span>
-            </div>
-          </div>
-        </div>
-        <div style="display: flex; align-items: center">
-          <label style="margin-right: 10px">DÍAS QUE CORRESPONDEN:</label>
-          <div class="fill">
-            <?=$dias_corresponden?>
-          </div>
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 5px">
-          <label style="margin-right: 33px">DÍAS QUE DISPONIBLES:</label>
-          <div class="fill">
-            <?=$dias_disponibles?>
-          </div>
-        </div>
-        <div class="row">
-          <div style="margin-top: 17px; margin-right: -1px">
-            <div style="border: solid 2px; width: 325px; height: 85px">
-              <div
-                style="
-                  margin-top: 50px;
-                  width: 280px;
-                  border-bottom: solid 2px;
-                  margin-left: 30px;
-                "
-              >
-                <!--VARIABLE-->
-              </div>
-              <label style="margin-left: 73px"
-                >NOMBRE Y FIRMA DEL SOLICITANTE</label
-              >
-            </div>
-          </div>
-          <div style="margin-top: -60px; margin-right: 30px">
-            <div style="border: solid 2px; width: 350px; height: 162px">
-              <div class="row">
-                <div
-                  style="display: flex; margin-top: 5px; align-items: center"
-                >
-                  <label style="margin-right: 10px; margin-left: 50px"
-                    >DÍAS SOLICITADOS:</label
-                  >
-                  <div class="fill">
-                    <?=$dias_solicitados?>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div style="display: flex; margin-top: 10px; margin-left: 10px">
-                  <label style="margin-right: 10px">DESDE:</label>
-                  <div class="fill-date">
-                    <div class="row" style="display: flex">
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_desde_dia?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >DD</span
-                        >
-                      </div>
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_desde_mes?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >MM</span
-                        >
-                      </div>
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_desde_anio?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >AAAA</span
-                        >
-                      </div>
+        <!-- Firma y fechas -->
+        <table style="margin-top: 15px;">
+            <tr>
+                <td width="40%" style="vertical-align: top;">
+                    <div class="signature-box">
+                        <div class="signature-label">NOMBRE Y FIRMA DEL SOLICITANTE</div>
                     </div>
-                  </div>
-                </div>
-                <div
-                  style="display: flex; margin-top: 10px; margin-right: 30px"
-                >
-                  <label style="margin-right: 10px; margin-left: -10px"
-                    >HASTA:</label
-                  >
-                  <div class="fill-date">
-                    <div class="row" style="display: flex">
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_hasta_dia?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >DD</span
-                        >
-                      </div>
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_hasta_mes?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >MM</span
-                        >
-                      </div>
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_hasta_anio?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >AAAA</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div style="margin-top: 18px">
-                <label style="margin-left: 50px"
-                  >FECHA QUE DEBERÁ PRESENTARSE A TRABAJAR</label
-                >
-                <div style="display: flex; margin-top: 10px; margin-left: 40%">
-                  <div class="fill-date">
-                    <div class="row" style="display: flex">
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_regreso_dia?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >DD</span
-                        >
-                      </div>
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_regreso_mes?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >MM</span
-                        >
-                      </div>
-                      <div class="fill_fecha" style="text-align: center">
-                        <?=$fecha_regreso_anio?><br />
-                        <span style="display: inline-block; margin-top: 6px"
-                          >AAAA</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                </td>
+                <td width="60%" style="padding-left: 10px;">
+                    <table style="border: 1px solid #000; padding: 5px; width: 100%;">
+                        <tr>
+                            <td colspan="2">
+                                <span>DÍAS SOLICITADOS:</span>
+                                <span class="fill fill-medium" style="margin-left: 10px;"><?= $dias_solicitados ?></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="50%">
+                                <div>DESDE:</div>
+                                <table style="margin-top: 5px;">
+                                    <tr>
+                                        <td class="fill fill-small"><?= $fecha_desde_dia ?></td>
+                                        <td class="fill fill-small"><?= $fecha_desde_mes ?></td>
+                                        <td class="fill fill-small"><?= $fecha_desde_anio ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="date-label">DD</td>
+                                        <td class="date-label">MM</td>
+                                        <td class="date-label">AAAA</td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td width="50%">
+                                <div>HASTA:</div>
+                                <table style="margin-top: 5px;">
+                                    <tr>
+                                        <td class="fill fill-small"><?= $fecha_hasta_dia ?></td>
+                                        <td class="fill fill-small"><?= $fecha_hasta_mes ?></td>
+                                        <td class="fill fill-small"><?= $fecha_hasta_anio ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="date-label">DD</td>
+                                        <td class="date-label">MM</td>
+                                        <td class="date-label">AAAA</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="text-center" style="padding-top: 10px;">
+                                <div>FECHA QUE DEBERÁ PRESENTARSE A TRABAJAR</div>
+                                <table style="margin: 5px auto;">
+                                    <tr>
+                                        <td class="fill fill-small"><?= $fecha_regreso_dia ?></td>
+                                        <td class="fill fill-small"><?= $fecha_regreso_mes ?></td>
+                                        <td class="fill fill-small"><?= $fecha_regreso_anio ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="date-label">DD</td>
+                                        <td class="date-label">MM</td>
+                                        <td class="date-label">AAAA</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-      <div class="divider">
-        <span>AUTORIZACÍON</span>
-      </div>
+        <div class="divider">AUTORIZACIÓN</div>
 
-      <div class="section" style="margin-top: 5px">
-        <div class="row">
-          <div style="border: solid 2px; width: 50%; height: 70px">
-            <div
-              style="
-                margin-top: 37px;
-                width: 290px;
-                border-bottom: solid 2px;
-                margin-left: 22px;
-              "
-            >
-              <!--VARIABLE-->
-            </div>
-            <label style="margin-left: 70px"
-              >NOMBRE Y FIRMA DE JEFE INMEDIATO</label
-            >
-          </div>
-          <div style="border: solid 2px; width: 50%">
-            <div
-              style="
-                margin-top: 37px;
-                width: 290px;
-                border-bottom: solid 2px;
-                margin-left: 22px;
-              "
-            >
-              <!--VARIABLE-->
-            </div>
-            <label style="margin-left: 20px"
-              >NOMBRE Y FIRMA DEL DEPTO DE RECURSOS HUMANOS
-            </label>
-          </div>
-        </div>
-        <div class="row" style="align-items: center">
-          <label
-            >DURANTE EL TIEMPO QUE DUREN SUS VACACIONES SE REQUIERE TRAMITAR
-            ENCARGO:</label
-          >
-          <div style="display: flex; align-items: center; margin-right: -40px">
-            <label style="margin-right: 10px">Si</label>
-            <div style="border: solid 2px; height: 15px; width: 15px"></div>
-          </div>
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              margin-right: 30px;
-              margin-left: -30px;
-            "
-          >
-            <label style="margin-right: 10px">No</label>
-            <div style="border: solid 2px; height: 15px; width: 15px"></div>
-          </div>
-        </div>
-        <div class="row">
-          <div style="display: flex">
-            <label>NOMBRE:</label>
-            <div class="line" style="margin-left: 5px; width: 450px"></div>
-          </div>
-          <div style="display: flex">
-            <label>PUESTO:</label>
-            <div class="line" style="margin-left: 5px; width: 120px"></div>
-          </div>
-        </div>
-        <div class="row" style="margin-bottom: -10px">
-          <div style="display: flex">
-            <label>OBSERVACIONES:</label>
-            <div class="line" style="margin-left: 5px; width: 580px"></div>
-          </div>
-        </div>
-      </div>
+        <!-- Autorización -->
+        <table>
+            <tr>
+                <td width="50%" style="padding-right: 10px;">
+                    <div class="signature-box">
+                        <div class="signature-label">NOMBRE Y FIRMA DE JEFE INMEDIATO</div>
+                    </div>
+                </td>
+                <td width="50%">
+                    <div class="signature-box">
+                        <div class="signature-label">NOMBRE Y FIRMA DEL DEPTO DE RECURSOS HUMANOS</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <table style="margin-top: 15px;">
+            <tr>
+                <td colspan="4">
+                    <span>DURANTE EL TIEMPO QUE DUREN SUS VACACIONES SE REQUIERE TRAMITAR ENCARGO:</span>
+                    <span style="margin-left: 150px;">Si</span>
+                    <span class="fill" style="width: 10px; height: 10px; margin: 0 5px; border: 1px solid black; background-color: white; display: inline-block;"></span>
+                    <span>No</span>
+                    <span class="fill" style="width: 10px; height: 10px; margin: 0 5px; border: 1px solid black; background-color: white; display: inline-block;"></span>
+                </td>
+            </tr>
+            <tr>
+                <td width="10%">NOMBRE:</td>
+                <td width="40%" class="line"></td>
+                <td width="10%">PUESTO:</td>
+                <td width="40%" class="line"></td>
+            </tr>
+            <tr>
+                <td>OBSERVACIONES:</td>
+                <td colspan="3" class="line"></td>
+            </tr>
+        </table>
     </div>
-  </body>
+</body>
 </html>

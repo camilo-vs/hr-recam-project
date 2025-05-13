@@ -55,36 +55,36 @@ class empleados__model
                 INNER JOIN departments d ON r.department = d.department_id
                 LEFT JOIN employees s ON d.supervisor_number = s.employee_number_id
                 WHERE r.role_id = $index";
-    
+
         $result = mysqli_query($this->db, $sql);
-    
+
         if ($result) {
             if (mysqli_num_rows($result) == 0) {
                 $respuesta = array(
                     'error' => true,
-                    'sql'   => $sql
+                    'sql' => $sql
                 );
             } else {
                 $data = mysqli_fetch_assoc($result);
                 $respuesta = array(
-                    'error'           => false,
-                    'msg'             => 'Consulta correcta',
-                    'departmentName'  => $data['departmentName'],
-                    'supervisorName'  => $data['supervisorName'],
-                    'roleName'        => $data['roleName'],
-                    'sql'             => $sql
+                    'error' => false,
+                    'msg' => 'Consulta correcta',
+                    'departmentName' => $data['departmentName'],
+                    'supervisorName' => $data['supervisorName'],
+                    'roleName' => $data['roleName'],
+                    'sql' => $sql
                 );
             }
         } else {
             $respuesta = array(
                 'error' => true,
-                'msg'   => 'Error en la consulta: ' . mysqli_error($this->db),
-                'sql'   => $sql
+                'msg' => 'Error en la consulta: ' . mysqli_error($this->db),
+                'sql' => $sql
             );
         }
         return json_encode($respuesta);
     }
-    
+
 
     public function consultarEmpleados()
     {
@@ -106,16 +106,28 @@ class empleados__model
                     employee.genre AS genre_wname,
                     role.role_id AS role_wname,
                     role.name AS role_name,
-                    DATE_FORMAT(employee.hire_date, '%d/%m/%Y %H:%i:%s') AS hire_date,
+                    DATE_FORMAT(employee.hire_date, '%d/%m/%Y') AS hire_date,
                     sup.name AS supervisor,
                     dept.name AS department,
-                    DATE_FORMAT(employee.update_date, '%d/%m/%Y %H:%i:%s') AS update_date
+                    DATE_FORMAT(employee.update_date, '%d/%m/%Y %H:%i:%s') AS update_date,
+                    employee.nss,
+                    employee.rfc,
+                    employee.curp,
+                    employee.phone,
+                    employee.address,
+                    employee.birth_date,
+                    employee.type as id_type,
+                     CASE
+                        WHEN employee.type = 1 THEN 'RECAM'
+                        WHEN employee.type = 0 THEN 'GPI'
+                        ELSE 'Desconocido'
+                    END AS type
                 FROM employees employee
                 INNER JOIN roles role ON employee.role = role.role_id
                 INNER JOIN departments dept ON role.department = dept.department_id
                 LEFT JOIN employees sup ON dept.supervisor_number = sup.employee_number_id
                 ORDER BY employee.employee_number_id ASC";
-    
+
         $result = mysqli_query($this->db, $sql);
 
         if ($result) {
@@ -170,24 +182,37 @@ class empleados__model
                 }
 
                 $values = "";
-                $values .= "" . $data['employee_number_id'] . ",";
-                $values .= "" . $data['puesto'] . ",";
-                $values .= "'" . $data['username'] . "',";
-                $values .= "" . $data['genero'] . ",";
-                $values .= "" . $_SESSION['id'] . "";
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['new_hire_date']) . "',";
+                $values .= intval($data['employee_number_id']) . ",";                  // numérico
+                $values .= intval($data['puesto']) . ",";                              // numérico
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['username']) . "',";
+                $values .= intval($data['genero']) . ",";                              // numérico
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['new_nss']) . "',";
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['new_curp']) . "',";
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['new_rfc']) . "',";
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['new_birth_date']) . "',";
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['new_phone']) . "',";
+                $values .= "'" . mysqli_real_escape_string($this->db, $data['new_address']) . "',";
+                $values .= intval($_SESSION['id']);
 
                 $sql = "INSERT INTO employees (
+                        hire_date,
                         employee_number_id,
                         role,
                         name,
                         genre,
+                        nss,
+                        curp,
+                        rfc,
+                        birth_date,
+                        phone,
+                        address,
                         created_by) 
                         VALUES ($values)";
 
                 $result = mysqli_query($this->db, $sql);
 
                 if (!$result) {
-
                     $respuesta = array(
                         'error' => true,
                         'msg' => 'Error al insertar: ' . mysqli_error($this->db),
@@ -216,6 +241,7 @@ class empleados__model
 
     public function editarEmpleado($data)
     {
+
         mysqli_select_db($this->db, "hr_system");
 
         if (!isset($_SESSION)) {
@@ -225,9 +251,44 @@ class empleados__model
         // Se arma la cadena SET con todos los campos a actualizar
         $set = "";
         $set .= "employee_number_id = '" . $data['employee_number_change'] . "', ";
+        if( $data['editTYPE'] != ''){
+            $set .= "type = '" . $data['editTYPE'] . "', ";
+        }else{
+            $set .= "type = null, ";
+        }
         $set .= "name = '" . $data['username'] . "', ";
         $set .= "genre = '" . $data['genero'] . "', ";
         $set .= "role = '" . $data['role'] . "', ";
+        if( $data['nss'] != ''){
+            $set .= "nss = '" . $data['nss'] . "', ";
+        }else{
+            $set .= "nss = null, ";
+        }
+        if( $data['curp'] != ''){
+            $set .= "curp = '" . $data['curp'] . "', ";
+        }else{
+            $set .= "curp = curp, ";
+        }
+        if( $data['rfc'] != ''){
+            $set .= "rfc = '" . $data['rfc'] . "', ";
+        }else{
+            $set .= "rfc = null, ";
+        }
+        if( $data['birth_date'] != ''){
+            $set .= "birth_date = '" . $data['birth_date'] . "', ";
+        }else{
+            $set .= "birth_date = null, ";
+        }
+        if( $data['phone'] != ''){
+            $set .= "phone = '" . $data['phone'] . "', ";
+        }else{
+            $set .= "phone = null, ";
+        }
+        if( $data['address'] != ''){
+            $set .= "address = '" . $data['address'] . "', ";
+        }else{
+            $set .= "address = null, ";
+        }
         $set .= "updated_by = " . $_SESSION['id'] . ", ";
         $set .= "update_date = NOW()";
 
@@ -309,7 +370,7 @@ class empleados__model
         $condicion .= " AND employee_number_id LIKE '" . $employee_number_id . "'";
 
         $sql = "SELECT count(*) total FROM employees where 1=1 " . $condicion;
- 
+
         $result = mysqli_query($this->db, $sql);
 
         if (!$result) {

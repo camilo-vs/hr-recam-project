@@ -7,7 +7,7 @@
   <meta name="description" content="Gestor de recursos humanos RECAM CORTELASER">
   <meta name="author" content="Juan Camilo - Nataniel">
   <title>Gestor Recursos Humanos</title>
-
+  <link rel="icon" type="image/x-icon" href="assets/img/logo_ico.ico">
   <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/navbars/">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
@@ -140,7 +140,7 @@
             <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Gestionar Registros</button>
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_empleados">Empleados</a>
-              <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_usuarios">Usuaios</a>
+              <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_usuarios">Usuarios</a>
             </ul>
           </li>
           <li class="nav-item">

@@ -1,224 +1,192 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Solicitud de Vacaciones</title>
+    <title>Solicitud de Salida</title>
     <style>
-      body {
-        margin: 40px;
-        font-family: Arial, Helvetica, sans-serif;
-        font-weight: lighter;
-        font-size: 12px;
-        letter-spacing: -0.6px;
-      }
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            letter-spacing: -0.6px;
+        }
 
-      .container {
-        width: 95%;
-        margin: auto;
-        border: 2px solid black;
-        padding: 20px;
-      }
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            border: 2px solid black;
+            padding: 15px;
+            box-sizing: border-box;
+        }
 
-      .title {
-        text-align: center;
-        font-weight: bold;
-        font-size: 17px;
-        margin-left: 80px;
-      }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-      .section {
-        margin-top: 20px;
-        padding-bottom: 10px;
-      }
+        td {
+            vertical-align: bottom;
+            padding: 2px 5px;
+        }
 
-      .row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-      }
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 17px;
+            padding: 10px 0;
+        }
 
-      .header-content {
-        display: inline-block;
-        align-items: center;
-        justify-content: start;
-        gap: 30px;
-      }
+        .fill {
+            border: 2px solid #000;
+            width: 90px;
+            height: 20px;
+            text-align: center;
+            display: inline-block;
+        }
 
-      .fill {
-        border: solid 2px;
-        width: 90px;
-        height: 20px;
-        text-align: center;
-      }
+        .line {
+            border-bottom: 2px solid black;
+            width: 100%;
+            height: 20px;
+        }
 
-      .line {
-        width: 80%;
-        border-bottom: 2px solid black;
-        margin-left: -40px;
-      }
+        .divider {
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 3px 0;
+        }
 
-      .fill-date .fill {
-        border: solid 2px;
-        width: 100px;
-        height: 18px;
-        margin-bottom: -10px;
-        margin-top: -8px;
-      }
+        .signature-line {
+            border-bottom: 2px solid black;
+            width: 100%;
+            height: 20px;
+        }
 
-      .fill-date span {
-        word-spacing: 10px;
-        margin-left: 4px;
-        display: inline;
-      }
+        .signature-label {
+            font-size: 10px;
+            text-align: center;
+            padding-top: 3px;
+        }
 
-      .img-logo {
-        height: 30px;
-        width: 150px;
-      }
+        .checkbox-group {
+            display: inline-block;
+            margin-right: 20px;
+            text-align: center;
+        }
 
-      .label-logo {
-        margin-top: 1px;
-      }
+        .motivo-line {
+            border-bottom: 2px solid black;
+            width: 95%;
+            height: 20px;
+            margin: 10px auto;
+        }
 
-      .specs {
-        margin-bottom: -14px;
-        font-size: 10px;
-      }
+        .header-info {
+            text-align: right;
+            font-size: 10px;
+            line-height: 1.2;
+        }
 
-      .header {
-        margin: -13px;
-      }
-
-      .text-header {
-        align-items: center;
-        margin-top: -50px;
-        margin-left: 150px;
-        font-size: 10px;
-        margin-bottom: 10px;
-      }
-
-      .text-header2 {
-        align-items: center;
-        margin-top: 3px;
-        margin-left: 170px;
-        font-size: 10px;
-        margin-bottom: 10px;
-      }
-
-      .divider {
-        text-align: center;
-        color: black;
-        font-weight: bold;
-        width: 100%;
-        padding-left: 20px;
-        padding-right: 20px;
-        margin-left: -20px;
-        margin-top: -10px;
-      }
+        .logo {
+            width: 200px;
+        }
     </style>
-  </head>
+</head>
 
-  <body>
+<body>
     <div class="container">
-      <div class="header">
-        <div class="row">
-          <div class="img-logo">
-            <img
-              src="https://recamcortelaser.com/wp-content/uploads/2025/04/logo_licen.png"
-              alt=""
-              width="200px"
-            />
-          </div>
-          <div class="title">PASE DE AUTORIZACIÓN PARA ENTRADA DE PERSONAL</div>
-          <div class="conainer-rev">
-            <div class="row">
-              <label class="specs">CÓDIGO: R-SRH-014</label>
-            </div>
-            <div class="row">
-              <label class="specs">REV: 01</label>
-            </div>
-            <div class="row">
-              <label class="specs">EMISIÓN: 28-04-2020</label>
-            </div>
-          </div>
-        </div>
-      </div>
+        <table>
+            <tr>
+                <td width="30%">
+                    <img class="logo" src="https://recamcortelaser.com/wp-content/uploads/2025/04/logo_licen.png" alt="Logo" />
+                </td>
+                <td>
+                    <div class="title">
+                        PASE DE AUTORIZACIÓN PARA <br />
+                        ENTRADA DE PERSONAL
+                    </div>
+                </td>
+                <td width="20%" class="header-info">
+                    CÓDIGO: R-SRH-014<br>
+                    REV: 01<br>
+                    EMISIÓN: 28-04-2020
+                </td>
+            </tr>
+        </table>
+        <br>
+        <table>
+            <tr>
+                <td width="15%">NOMBRE:</td>
+                <td>
+                    <div class="line"><?=$nombre_empleado?></div>
+                </td>
+            </tr>
+            <tr>
+                <td>AREA:</td>
+                <td>
+                    <div class="line"><?=$departamento?></div>
+                </td>
+            </tr>
+            <tr>
+                <td>FECHA:</td>
+                <td>
+                    <div class="line"><?=$fecha_solicitud?></div>
+                </td>
+            </tr>
+            <tr>
+                <td>ENTRADA:</td>
+                <td>
+                    <div class="line"><?=$fecha_solicitada?></div>
+                </td>
+            </tr>
+        </table>
 
-      <div class="section">
-        <div class="row">
-          <label>NOMBRE DEL EMPLEADO:</label>
-          <div class="line">
-            <?=$nombre_empleado?>
-          </div>
-        </div>
-        <div class="row">
-          <label style="margin-right: -50px">DEPARTAMENTO:</label>
-          <div class="line">
-            <?=$departamento?>
-          </div>
-        </div>
-        <div class="row">
-          <label style="margin-right: -50px">FECHA:</label>
-          <div class="line">
-            <?=$fecha_solicitud?>
-          </div>
-        </div>
-        <div class="row">
-          <label style="margin-right: -50px">ENTRADA:</label>
-          <div class="line">
-            <?=$fecha_solicitada?>
-          </div>
-        </div>
-      </div>
+        <div class="divider">MOTIVO:</div>
 
-      <div class="divider">MOTIVO:</div>
+        <table>
+            <tr>
+                <td>
+                    <div class="motivo-line"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="motivo-line"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="motivo-line"></div>
+                </td>
+            </tr>
+        </table>
 
-      <div class="section">
-        <div class="row">
-          <div class="line" style="margin-left: 80px"></div>
-        </div>
-        <div class="row">
-          <div class="line" style="margin-left: 80px; margin-top: 20px"></div>
-        </div>
-        <div class="row">
-          <div class="line" style="margin-left: 80px; margin-top: 20px"></div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="row">
-          <label style="margin-right: -60px">EMPLEADO:</label>
-          <div
-            style="border-bottom: solid 2px; width: 50%; margin-right: 150px"
-          ></div>
-        </div>
-        <div class="row">
-          <label style="margin-left: 50%; margin-bottom: 20px">FIRMA</label>
-        </div>
-        <div class="row">
-          <label style="margin-right: -60px">AUTORIZÓ:</label>
-          <div
-            style="border-bottom: solid 2px; width: 50%; margin-right: 150px"
-          ></div>
-        </div>
-        <div class="row">
-          <label style="margin-left: 46%; margin-bottom: 20px"
-            >NOMBRE Y FIRMA</label
-          >
-        </div>
-        <div class="row">
-          <label style="margin-right: -60px">RRHH:</label>
-          <div
-            style="border-bottom: solid 2px; width: 50%; margin-right: 150px"
-          ></div>
-        </div>
-        <div class="row">
-          <label style="margin-left: 46%; margin-bottom: 20px"
-            >NOMBRE Y FIRMA</label
-          >
-        </div>
-      </div>
+        <table>
+            <tr>
+                <td style="vertical-align: top;" width="15%">EMPLEADO:</td>
+                <td>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">FIRMA</div>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top;">AUTORIZÓ:</td>
+                <td>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">NOMBRE Y FIRMA</div>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top;">RRHH:</td>
+                <td>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">NOMBRE Y FIRMA</div>
+                </td>
+            </tr>
+        </table>
     </div>
-  </body>
+</body>
 </html>

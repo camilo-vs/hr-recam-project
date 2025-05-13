@@ -54,7 +54,7 @@
               text: '¡Bienvenido! Ahora puedes iniciar sesión.',
             }).then(function() {
               // Redirigir al usuario a la página de login
-              window.location.href = 'index.php?c=paginas&m=home'; // Cambia por la ruta a tu página de login
+              window.location.href = 'index.php?c=paginas&m=login'; // Cambia por la ruta a tu página de login
             });
           } else {
             // Mostrar mensaje de error si el registro falla

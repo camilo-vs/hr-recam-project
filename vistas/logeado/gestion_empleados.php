@@ -1,9 +1,9 @@
 <script>
     //Funcionalidad al cargar la pagina
-    $(document).ready(function() {
+    $(document).ready(function () {
 
         $('#userTable').datagrid({
-            onSelect: function(index, row) {
+            onSelect: function (index, row) {
                 // Deshabilitar y habilitar botón según el estado
                 if (row.estado !== 'BAJA') {
                     $('#editButton').linkbutton('enable');
@@ -17,12 +17,18 @@
                 $('input[name="labelName"]').val(row.name);
                 $('input[name="labelHireDate"]').val(row.hire_date);
                 $('select[name="labelGenre"]').val(row.genre_wname);
+                $('#nss').val(row.nss);
+                $('#curp').val(row.curp);
+                $('#rfc').val(row.rfc);
+                $('#phone').val(row.phone);
+                $('#address').val(row.address);
+                $('#birth_date').val(row.birth_date);
                 $('select[name="labelRole"]').val(row.role_wname);
                 $('input[name="labelDepartment"]').val(row.department);
                 $('input[name="labelSupervisor"]').val(row.supervisor);
-
+                $('#editTYPE').val(row.id_type);
             },
-            onUnselect: function(index, row) {
+            onUnselect: function (index, row) {
                 // Deshabilitar botones cuando se deselecciona la fila
                 if (row.estado != 'BAJA') {
                     $('#editButton').linkbutton('enable');
@@ -36,6 +42,14 @@
                 $('select[name="labelGenre"]').prop("disabled", true);
                 $('select[name="labelRole"]').prop("disabled", true);
                 $('input[name="vacationDays"]').prop("disabled", true);
+
+                $('#editID').prop("disabled", true);
+                $('#nss').prop("disabled", true);
+                $('#curp').prop("disabled", true);
+                $('#rfc').prop("disabled", true);
+                $('#birth_date').prop("disabled", true);
+                $('#phone').prop("disabled", true);
+                $('#address').prop("disabled", true);
                 $('#editarUsuario').attr('hidden', true);
             }
         });
@@ -45,11 +59,12 @@
             type: 'POST',
             dataType: 'json',
             cache: false,
-            success: function(respuesta) {
+            success: function (respuesta) {
                 if (respuesta.error === true) {
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
                     $('#userTable').datagrid('loadData', respuesta.registros);
+                    $('#userTable').datagrid('enableFilter');
                 }
             }
         });
@@ -59,7 +74,7 @@
             type: 'POST',
             dataType: 'json',
             cache: false,
-            success: function(respuesta) {
+            success: function (respuesta) {
                 if (respuesta.error) {
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
@@ -67,7 +82,7 @@
                     var select = $('#editRole');
                     select.empty();
                     // Iterar el arreglo y agregar cada opción
-                    $.each(respuesta.departamentos, function(index, departamento) {
+                    $.each(respuesta.departamentos, function (index, departamento) {
                         select.append('<option value="' + departamento.role_id + '">' + departamento.name + '</option>');
                     });
 
@@ -75,12 +90,12 @@
                     var select = $('#puesto');
                     select.empty();
                     // Iterar el arreglo y agregar cada opción
-                    $.each(respuesta.departamentos, function(index, departamento) {
+                    $.each(respuesta.departamentos, function (index, departamento) {
                         select.append('<option value="' + departamento.role_id + '">' + departamento.name + '</option>');
                     });
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
             }
         });
@@ -99,6 +114,16 @@
         $('input[name="labelEmployeeNumberId"]').prop("disabled", false);
         $('select[name="labelGenre"]').prop("disabled", false);
         $('select[name="labelRole"]').prop("disabled", false);
+        $('#nss').prop("disabled", false);
+        $('#curp').prop("disabled", false);
+        $('#rfc').prop("disabled", false);
+        $('#birth_date').prop("disabled", false);
+        $('#phone').prop("disabled", false);
+        $('#address').prop("disabled", false);
+        $('#fecha_nacimiento').prop("disabled", false);
+        $('#telefono').prop("disabled", false);
+        $('#direaccion').prop("disabled", false);
+        $('#editTYPE').prop("disabled", false);
         $('#editarUsuario').removeAttr('hidden');
     }
 
@@ -116,18 +141,22 @@
                 dataType: 'json',
                 data: userData,
                 cache: false,
-                success: function(respuesta) {
+                success: function (respuesta) {
                     $.messager.progress('close');
                     if (respuesta.error == true) {
                         $.messager.alert('Error', respuesta.msg, 'error');
                     } else {
                         if (respuesta.creado != false) {
                             // Encadena la llamada a consultarDatosExtraTABLA
-                            consultarDatosExtraTABLA().done(function(respExtra) {
+                            consultarDatosExtraTABLA().done(function (respExtra) {
                                 if (respExtra.error === true) {
                                     $.messager.alert('Error', respExtra.msg, 'error');
                                     return;
                                 }
+                                let hire_date_raw = $('#new_hire_date').val(); // formato: yyyy-mm-dd
+                                let parts = hire_date_raw.split('-'); // [yyyy, mm, dd]
+                                let hire_date = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
                                 var newRow = {
                                     employee_number_id: respuesta.datos['employee_number_id'],
                                     name: respuesta.datos['username'],
@@ -136,17 +165,16 @@
                                     genero: $('#genero option:selected').text(),
                                     role_name: $('#puesto option:selected').text(),
                                     role_wname: $('#puesto option:selected').val(),
+                                    nss: $('#new_nss').val(),
+                                    curp: $('#new_curp').val(),
+                                    rfc: $('#new_rfc').val(),
+                                    birth_date: $('#new_birth_date').val(),
+                                    phone: $('#new_phone').val(),
+                                    address: $('#new_address').val(),
                                     // Usando los valores obtenidos en la función consultarDatosExtraTABLA:
                                     supervisor: respExtra.supervisorName,
                                     department: respExtra.departmentName,
-                                    hire_date: new Date().toLocaleString('es-ES', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit'
-                                    }).replace(",", "")
+                                    hire_date: hire_date
                                 };
 
                                 $('#userTable').datagrid('insertRow', {
@@ -155,7 +183,7 @@
                                 });
                                 $('#userDialog').dialog('close');
                                 $.messager.alert('Se realizo la petición', 'Se creo el nuevo usuario!', 'info');
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                            }).fail(function (jqXHR, textStatus, errorThrown) {
                                 console.error("Error en consultarDatosExtraTABLA:", errorThrown);
                                 $.messager.alert('Error', 'No se pudieron obtener los datos extra.', 'error');
                             });
@@ -166,7 +194,26 @@
                 }
             });
         } else {
-            $.messager.alert('Alerta', 'Por favor complete todos los campos', 'info');
+            document.getElementById('userForm').reportValidity();
+
+            // Validación personalizada de campos clave
+            const campos = [
+                { id: 'new_nss', errorId: 'nssError' },
+                { id: 'new_curp', errorId: 'curpError' },
+                { id: 'new_rfc', errorId: 'rfcError' },
+                { id: 'new_phone', errorId: 'phoneError' }
+            ];
+
+            campos.forEach(campo => {
+                const input = document.getElementById(campo.id);
+                const errorElem = document.getElementById(campo.errorId);
+
+                if (!input.checkValidity()) {
+                    errorElem.textContent = input.title;
+                } else {
+                    errorElem.textContent = '';
+                }
+            });
         }
     }
 
@@ -179,30 +226,56 @@
             return;
         }
 
+        // Obtener valores de los campos
+        var idType = $('#editTYPE').val();
+        var employeeID = $('#editID').val();
+        var name = $('#editName').val();
+        var genre = $('#editGenre').val();
+        var role = $('#editRole').val();
+
+        // Validar que los campos requeridos no estén vacíos
+        if (!idType || !employeeID || !name || !genre || !role) {
+            $.messager.alert('Error', 'Por favor completa todos los campos obligatorios.', 'error');
+            return;
+        }
+
         var index = $('#userTable').datagrid('getRowIndex', row);
 
-        // Se comparan todos los campos relevantes
+        // Comparar si hubo cambios
         if (
-            row.employee_number_id === $('#editID').val() &&
-            row.name === $('#editName').val() &&
-            row.genre_wname === $('#editGenre').val() &&
-            row.role_wname === $('#editRole').val()
+            row.id_type === idType &&
+            row.employee_number_id === employeeID &&
+            row.name === name &&
+            row.genre_wname === genre &&
+            row.role_wname === role &&
+            row.nss === $('#nss').val() &&
+            row.curp === $('#curp').val() &&
+            row.rfc === $('#rfc').val() &&
+            row.birth_date === $('#birth_date').val() &&
+            row.phone === $('#phone').val() &&
+            row.addres === $('#addres').val()
         ) {
             $.messager.alert('Info', 'No se detecta ningún cambio.', 'info');
             return;
         }
 
         var userData = $('#editForm').serialize();
+
         var userId = row.employee_number_id;
         userData += '&id=' + userId;
-
+        var type = '';
+        if(idType == "1"){
+            type = 'RECAM';
+        }else{
+            type = 'GPI';
+        }
         $.ajax({
             url: 'index.php?c=empleados&m=editarEmpleado',
             type: 'POST',
             dataType: 'json',
             data: userData,
             cache: false,
-            success: function(respuesta) {
+            success: function (respuesta) {
                 $.messager.progress('close');
                 if (respuesta.error === true) {
                     $.messager.alert('Error', respuesta.msg, 'error');
@@ -211,12 +284,20 @@
                         // Actualiza la fila en la tabla con los nuevos datos
                         var updatedData = {
                             employee_number_id: $('#editID').val(),
+                            type: type,
+                            id_type:  $('#editTYPE').val(),
                             name: $('#editName').val(),
                             genero: $('#editGenre option:selected').text(),
                             role_name: $('#editRole option:selected').text(),
                             role_wname: $('#editRole').val(),
                             department: $('#editDepartment').val(),
                             supervisor: $('#editSupervisor').val(),
+                            nss: $('#nss').val(),
+                            curp: $('#curp').val(),
+                            rfc: $('#rfc').val(),
+                            birth_date: $('#birth_date').val(),
+                            phone: $('#phone').val(),
+                            address: $('#address').val(),
                             update_date: new Date().toLocaleString('es-ES', {
                                 year: 'numeric',
                                 month: '2-digit',
@@ -233,13 +314,20 @@
                             row: updatedData
                         });
 
+                        $('#editTYPE').attr('disabled', true);
                         $('input[name="labelName"]').prop("disabled", true);
                         $('input[name="labelEmployeeNumberId"]').prop("disabled", true);
                         $('select[name="labelGenre"]').prop("disabled", true);
                         $('select[name="labelRole"]').prop("disabled", true);
                         $('input[name="vacationDays"]').prop("disabled", true);
+                        $('#nss').prop("disabled", true);
+                        $('#curp').prop("disabled", true);
+                        $('#rfc').prop("disabled", true);
+                        $('#birth_date').prop("disabled", true);
+                        $('#phone').prop("disabled", true);
+                        $('#address').prop("disabled", true);
                         $('#editarUsuario').attr('hidden', true);
-
+               
                         $('#userDialog').dialog('close');
                         $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
                     } else {
@@ -247,7 +335,7 @@
                     }
                 }
             },
-            error: function() {
+            error: function () {
                 $.messager.alert('Error', 'Hubo un problema al procesar la solicitud. Intenta nuevamente.', 'error');
             }
         });
@@ -265,7 +353,7 @@
             cambio = 'ACTIVO';
             estado = 1;
         }
-        $.messager.confirm('Confirmación', 'Se cambiara el estado a ' + cambio + ' del usuario ' + row.name + ' ¿Está seguro?', function(r) {
+        $.messager.confirm('Confirmación', 'Se cambiara el estado a ' + cambio + ' del usuario ' + row.name + ' ¿Está seguro?', function (r) {
             if (r) {
                 $.ajax({
                     url: 'index.php?c=empleados&m=cambiarEstado',
@@ -276,7 +364,7 @@
                         estado: estado
                     },
                     cache: false,
-                    success: function(respuesta) {
+                    success: function (respuesta) {
                         if (respuesta.error === true) {
                             $.messager.alert('Error', respuesta.msg, 'error');
                         } else {
@@ -342,7 +430,7 @@
                     name: $('#username').val()
                 },
                 cache: false,
-                success: function(respuesta) {
+                success: function (respuesta) {
 
                     if (respuesta.error === true) {
                         $.messager.alert('Error', respuesta.msg, 'error');
@@ -360,28 +448,39 @@
     }
 
     //COLORES DE CELDAS
-    $(function() {
+    $(function () {
         var dg = $('#userTable');
 
-        // Definir el estilo dinámico en base a la columna 'estado'
+        // Obtener opciones de columna y aplicar styler a 'estado'
         var estadoCol = dg.datagrid('getColumnOption', 'estado');
-        estadoCol.styler = function(value, row, index) {
+        estadoCol.styler = function (value, row, index) {
             if (value === 'ACTIVO') {
                 return 'background-color: green; color: white; font-weight: bold;';
             } else if (value === 'BAJA') {
                 return 'background-color: red; color: white; font-weight: bold;';
-            } else {
-                return '';
             }
+            return '';
         };
 
-        // Refrescar las filas para aplicar los estilos
+        // Obtener opciones de columna y aplicar styler a 'type'
+        var tipoCol = dg.datagrid('getColumnOption', 'type');
+        tipoCol.styler = function (value, row, index) {
+            if (value === 'GPI') {
+                return 'background-color: #577bea; color: white; font-weight: bold;';
+            } else if (value === 'RECAM') {
+                return 'background-color: #f5b041; color: white; font-weight: bold;';
+            }
+            return '';
+        };
+
+        // Recargar para aplicar estilos
         dg.datagrid('reload');
     });
 
+
     function consultarDatosExtraTABLA() {
         // Obtiene el índice seleccionado
-        var index = $('#puesto').prop('selectedIndex');
+        var index = $('#puesto').val();
         // Retorna el objeto AJAX (Deferred)
         return $.ajax({
             url: 'index.php?c=empleados&m=consultarDatosExtra',
@@ -405,7 +504,7 @@
                 index: index
             },
             cache: false,
-            success: function(respuesta) {
+            success: function (respuesta) {
                 if (respuesta.error === true) {
                     alert('Error: ' + respuesta.msg);
                 } else {
@@ -413,7 +512,7 @@
                     $('input[name="labelDepartment"]').val(respuesta.departmentName);
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 console.error("Error AJAX:", error);
             }
         });
@@ -424,19 +523,18 @@
     <div class="container-fluid d-flex p-5" style="height: 800px;">
         <!-- Primera sección (70%) con margen -->
         <!--TABLA DE LOS USUARIOS-->
-        <table id="userTable" class="easyui-datagrid" title="Gestion de usuarios"
-            style="width:65.7%;height:100%" data-options="singleSelect:true,collapsible:true"
-            toolbar="#toolbar">
+        <table id="userTable" class="easyui-datagrid" title="Gestion de usuarios" style="width:65.7%;height:100%"
+            data-options="singleSelect:true,collapsible:true" toolbar="#toolbar">
             <thead>
                 <tr>
-                    <th data-options="field:'employee_number_id',width:50">#</th>
-                    <th data-options="field:'name',width:200">Nombre</th>
-                    <th data-options="field:'estado',width:100">Estado</th>
-                    <th data-options="field:'genero',width:150">Genero</th>
-                    <th data-options="field:'department',width:175">Departamento</th>
+                    <th data-options="field:'employee_number_id',width:50" align="center">Num Emp</th>
+                    <th data-options="field:'name',width:250">Nombre</th>
+                    <th data-options="field:'type',width:100" align="center">Empresa</th>
+                    <th data-options="field:'estado',width:100" align="center">Estado</th>
+                    <th data-options="field:'department',width:130" align="center">Departamento</th>
                     <th data-options="field:'role_name',width:200">Cargo</th>
                     <th data-options="field:'supervisor',width:165">Supervisor</th>
-                    <th data-options="field:'hire_date',width:155">Fecha de alta</th>
+                    <th data-options="field:'hire_date',width:155" align="center">Fecha de alta</th>
                     <th data-options="field:'role_wname',width:155" hidden></th>
                     <th data-options="field:'genre_wname',width:155" hidden></th>
                 </tr>
@@ -451,37 +549,75 @@
         </div>
 
         <!--MODAL-->
-        <div id="userDialog" class="easyui-dialog" title="Crear Usuario"
-            style="width:400px;height:514px;padding:10px" closed="true" buttons="#dlg-buttons">
+        <div id="userDialog" class="easyui-dialog" title="Crear Usuario" style="width:600px;height:auto;padding:10px"
+            closed="true" buttons="#dlg-buttons">
             <form id="userForm" method="post">
-                <div class="form-group py-3">
-                    <label for="employee_number_id" id="label_number">Numero de empleado:</label>
-                    <input id="employee_number_id" name="employee_number_id" type="number" class="form-control" required="true">
-                </div>
-                <div class="form-group py-3">
-                    <label for="puesto">Puesto:</label>
-                    <select id="puesto" name="puesto" class="form-control">
-                    </select>
-                </div>
-                <div class="form-group py-3">
-                    <label for="username" id="label_nombre">Nombre:</label>
-                    <input id="username" name="username" type="text" class="form-control" required="true">
-                </div>
-                <div class="form-group py-3">
-                    <label for="genero">Genero:</label>
-                    <select id="genero" name="genero" class="form-control">
-                        <option value="0">Femenino</option>
-                        <option value="1">Masculino</option>
-                    </select>
+                <div class="row">
+                    <div class="col-md-6 py-2">
+                        <label for="new_hire_date">Fecha de ingreso:</label>
+                        <input id="new_hire_date" name="new_hire_date" type="date" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="employee_number_id">Número de empleado:</label>
+                        <input id="employee_number_id" name="employee_number_id" type="number" class="form-control"
+                            required>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="username">Nombre:</label>
+                        <input id="username" name="username" type="text" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="genero">Género:</label>
+                        <select id="genero" name="genero" class="form-control">
+                            <option value="0">Femenino</option>
+                            <option value="1">Masculino</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="puesto">Puesto:</label>
+                        <select id="puesto" name="puesto" class="form-control"></select>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="new_nss">NSS:</label>
+                        <input id="new_nss" name="new_nss" pattern="^\d{11}$" maxlength="11" minlength="11" type="text"
+                            class="form-control" title="Debe contener exactamente 11 dígitos numéricos">
+                        <small id="nssError" class="text-danger"></small>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="new_curp">CURP:</label>
+                        <input id="new_curp" pattern="^[a-zA-Z0-9]{18}$" maxlength="18"
+                            title="CURP inválida. Debe tener 18 caracteres alfanuméricos según el formato oficial"
+                            name="new_curp" type="text" class="form-control">
+                        <small id="curpError" class="text-danger"></small>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="new_rfc">RFC:</label>
+                        <input id="new_rfc" name="new_rfc" pattern="^[a-zA-Z0-9]{13}$" maxlength="13"
+                            title="RFC inválido. Debe tener 12 o 13 caracteres con el formato correcto" type="text"
+                            class="form-control">
+                        <small id="rfcError" class="text-danger"></small>
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="new_birth_date">Fecha de nacimiento:</label>
+                        <input id="new_birth_date" name="new_birth_date" type="date" class="form-control">
+                    </div>
+                    <div class="col-md-6 py-2">
+                        <label for="new_phone">Teléfono:</label>
+                        <input id="new_phone" name="new_phone" pattern="^\d{10}$" maxlength="10" minlength="10"
+                            title="Debe contener exactamente 10 dígitos numéricos" type="tel" class="form-control">
+                        <small id="phoneError" class="text-danger"></small>
+                    </div>
+                    <div class="col-md-12 py-2">
+                        <label for="new_address">Dirección:</label>
+                        <textarea id="new_address" name="new_address" class="form-control" rows="2"></textarea>
+                    </div>
                 </div>
             </form>
         </div>
         <!-- Botones del modal -->
         <div id="dlg-buttons">
-            <button type="button" class="btn btn-success" id="crearUsuario"
-                onclick="submitForm()">Crear</button>
-            <button type="button" class="btn btn-danger"
-                onclick="$('#userDialog').dialog('close')">Cancelar</button>
+            <button type="button" class="btn btn-success" id="crearUsuario" onclick="submitForm()">Crear</button>
+            <button type="button" class="btn btn-danger" onclick="$('#userDialog').dialog('close')">Cancelar</button>
         </div>
 
         <!-- Segunda sección (30%) -->
@@ -493,17 +629,35 @@
                     <a href="javascript:void(0)" class="easyui-linkbutton col-sm-3" iconCls="icon-edit" plain="true"
                         onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
                 </div>
-                <div class="input-group mb-2 w-25">
-                    <span class="input-group-text" id="basic-addon1">#</span>
-                    <input type="text" class="form-control" name="labelEmployeeNumberId" id="editID" aria-describedby="basic-addon1" disabled>
-                </div>
-                <input type="text" class="form-control w-75 mb-2" id="editName" name="labelName" disabled>
                 <div class="row mb-2">
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
+                        <div class="input-group mb-2">
+                            <span class="input-group-text" id="basic-addon1">#</span>
+                            <input type="text" class="form-control" name="labelEmployeeNumberId" id="editID"
+                                aria-describedby="basic-addon1" disabled>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="input-group mb-2">
+                            <span class="input-group-text" id="basic-addon1">EMPRESA</span>
+                            <select id="editTYPE" name="labelType" class="form-control" disabled>
+                                <option value=""></option>
+                                <option value="0">GPI</option>
+                                <option value="1">RECAM</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-12">
+                        <p class="mb-0">Nombe:</p>
+                        <input type="text" class="form-control" id="editName" name="labelName" disabled>
+                    </div>
+                    <div class="col-sm-6">
                         <p class="mb-0">Fecha de ingreso:</p>
                         <input type="text" class="form-control" name="labelHireDate" readonly disabled>
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col-sm-6">
                         <p class="mb-0">Genero:</p>
                         <select id="editGenre" name="labelGenre" class="form-control" disabled>
                             <option value=""></option>
@@ -513,9 +667,46 @@
                     </div>
                 </div>
                 <div class="row mb-2">
+                    <div class="mb-2">
+                        <p class="mb-0">NSS:</p>
+                        <input type="text" class="form-control" id="nss" name="nss" disabled>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="mb-2">
+                        <p class="mb-0">CURP:</p>
+                        <input type="text" class="form-control" id="curp" name="curp" disabled>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="mb-2">
+                        <p class="mb-0">RFC:</p>
+                        <input type="text" class="form-control" id="rfc" name="rfc" disabled>
+                    </div>
+                </div>
+                <hr />
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <p class="mb-0">Fecha de nacimiento:</p>
+                        <input type="date" class="form-control" id="birth_date" name="birth_date" disabled>
+                    </div>
+                    <div class="col-sm-6">
+                        <p class="mb-0">Telefono:</p>
+                        <input type="number" class="form-control" id="phone" name="phone" disabled>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="mb-12">
+                        <p class="mb-0">Dirección:</p>
+                        <input type="text" class="form-control" id="address" name="address" disabled>
+                    </div>
+                </div>
+                <hr />
+                <div class="row mb-2">
                     <div class="col">
                         <p class="mb-0">Puesto del empleado:</p>
-                        <select id="editRole" name="labelRole" class="form-control" onchange="consultarDatosExtra()" disabled>
+                        <select id="editRole" name="labelRole" class="form-control" onchange="consultarDatosExtra()"
+                            disabled>
                         </select>
                     </div>
                     <div class="col">
@@ -531,8 +722,8 @@
                 </div>
                 <div class="row mb-5">
                     <div class="mb-2">
-                        <button type="button" class="btn btn-warning w-50 " id="editarUsuario"
-                            onclick="updateForm()" hidden>Editar</button>
+                        <button type="button" class="btn btn-warning" id="editarUsuario" onclick="updateForm()"
+                            style="width: 100%;" hidden>Editar</button>
                     </div>
                 </div>
             </div>

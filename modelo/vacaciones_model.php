@@ -26,7 +26,7 @@ class vacaciones__model
                 WHERE state = 2 
                 AND employee_number = " . intval($employee_number) . " 
                 AND year = " . intval($anio);
-
+       
         $result = mysqli_query($this->db, $sql);
 
         if ($result) {
@@ -122,7 +122,7 @@ class vacaciones__model
                     CASE
                         WHEN vr.state = 0 THEN 'CREADA'
                         WHEN vr.state = 1 THEN 'PROCESO'
-                        WHEN vr.state = 2 THEN 'APROVADA'
+                        WHEN vr.state = 2 THEN 'APROBADA'
                         WHEN vr.state = 3 THEN 'RECHAZADA'
                         ELSE 'Desconocido'
                     END AS estado,
@@ -143,7 +143,7 @@ class vacaciones__model
         $sql .= " WHERE vr.employee_number = " . intval($employee_number) . " ";
 
 
-        $sql .= " ORDER BY vr.request_date DESC, vr.state ASC ";
+        $sql .= " ORDER BY vr.state ASC, vr.request_date DESC ";
 
 
 
@@ -185,7 +185,7 @@ class vacaciones__model
                     CASE
                         WHEN r.state = 0 THEN 'CREADA'
                         WHEN r.state = 1 THEN 'PROCESO'
-                        WHEN r.state = 2 THEN 'APROVADA'
+                        WHEN r.state = 2 THEN 'APROBADA'
                         WHEN r.state = 3 THEN 'RECHAZADA'
                         ELSE 'Desconocido'
                     END AS estado,
@@ -241,13 +241,14 @@ class vacaciones__model
         }
 
         $employee_number = mysqli_real_escape_string($this->db, $data['employee_number']);
-        if ($data['preev_year'] == true) {
+      
+        if ($data['preev_year'] == 'true') {
             $anioSiguiente = date('Y', strtotime('+1 year'));
             $sql = "INSERT INTO vacation_requests (employee_number,year) VALUES ('$employee_number',  $anioSiguiente)";
         } else {
-            $sql = "INSERT INTO vacation_requests (employee_number) VALUES ('$employee_number')";
+            $year = date('Y');
+            $sql = "INSERT INTO vacation_requests (employee_number,year) VALUES ('$employee_number',  $year)";
         }
-
 
         $result = mysqli_query($this->db, $sql);
 
@@ -288,7 +289,7 @@ class vacaciones__model
         $type_request = mysqli_real_escape_string($this->db, $data['type_request']);
 
         $sql = "INSERT INTO requests (employee_number, type_request) VALUES ('$employee_number', '$type_request')";
-
+    
         $result = mysqli_query($this->db, $sql);
 
         if (!$result) {

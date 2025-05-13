@@ -31,11 +31,19 @@ class empleados_controller
 
     public function crearEmpleado()
     {
+        
+        $data['new_hire_date'] = $_POST['new_hire_date'];
         $data['employee_number_id'] = $_POST['employee_number_id'];
         $data['puesto'] = $_POST['puesto'];
         $data['username'] = $_POST['username'];
         $data['genero'] = $_POST['genero'];
 
+        $data['new_nss'] = $_POST['new_nss'];
+        $data['new_curp'] = $_POST['new_curp'];
+        $data['new_rfc'] = $_POST['new_rfc'];
+        $data['new_birth_date'] = $_POST['new_birth_date'];
+        $data['new_phone'] = $_POST['new_phone'];
+        $data['new_address'] = $_POST['new_address'];
         echo $this->model->crearEmpleado($data);
     }
 
@@ -50,11 +58,19 @@ class empleados_controller
         $data = array();
         // Usa el nombre correcto del input para el id
         $data['employee_number_id'] = $_POST['id'];
+        $data['editTYPE'] = $_POST['labelType'];
         $data['employee_number_change'] = $_POST['labelEmployeeNumberId'];
         // Usa el nombre correcto de los inputs
         $data['username'] = $_POST['labelName'];
         $data['genero'] = $_POST['labelGenre'];
         $data['role'] = $_POST['labelRole'];
+        
+        $data['nss'] = $_POST['nss'];
+        $data['curp'] = $_POST['curp'];
+        $data['rfc'] = $_POST['rfc'];
+        $data['birth_date'] = $_POST['birth_date'];
+        $data['phone'] = $_POST['phone'];
+        $data['address'] = $_POST['address'];
     
         echo $this->model->editarEmpleado($data);
     }
