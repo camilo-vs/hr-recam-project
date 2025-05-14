@@ -42,7 +42,7 @@
                 $('select[name="labelGenre"]').prop("disabled", true);
                 $('select[name="labelRole"]').prop("disabled", true);
                 $('input[name="vacationDays"]').prop("disabled", true);
-
+                $('#editTYPE').prop("disabled", true);
                 $('#editID').prop("disabled", true);
                 $('#nss').prop("disabled", true);
                 $('#curp').prop("disabled", true);
@@ -238,9 +238,7 @@
             $.messager.alert('Error', 'Por favor completa todos los campos obligatorios.', 'error');
             return;
         }
-
         var index = $('#userTable').datagrid('getRowIndex', row);
-
         // Comparar si hubo cambios
         if (
             row.id_type === idType &&
@@ -253,7 +251,7 @@
             row.rfc === $('#rfc').val() &&
             row.birth_date === $('#birth_date').val() &&
             row.phone === $('#phone').val() &&
-            row.addres === $('#addres').val()
+            row.address === $('#address').val()
         ) {
             $.messager.alert('Info', 'No se detecta ningún cambio.', 'info');
             return;

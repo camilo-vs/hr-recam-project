@@ -125,7 +125,7 @@
     <div class="container-xl">
       <!-- Logo ajustado con un tamaño específico -->
       <a class="navbar-brand" href="index.php?c=paginas&m=inicio">
-        <img src="assets/img/logos/logo.png" alt="Logo" class="logo">
+        <img src="assets/img/logos/recam_logo_white.png" alt="Logo">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>

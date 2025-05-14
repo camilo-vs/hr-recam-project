@@ -21,7 +21,12 @@ class empleados_controller
     {
         echo $this->model->consultarEmpleados();
     }
-
+    
+    public function consultarEmpleadosSolicitud()
+    {
+        echo $this->model->consultarEmpleadosSolicitud();
+    }
+    
     public function consultarDatosExtra()
     {
         $index = $_POST['index'];

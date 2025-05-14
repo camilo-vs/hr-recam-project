@@ -154,6 +154,74 @@ class empleados__model
         return json_encode($respuesta);
     }
 
+    public function consultarEmpleadosSolicitud()
+    {
+        mysqli_select_db($this->db, "hr_system");
+
+        $sql = "SELECT
+                    employee.employee_number_id,
+                    employee.name,
+                    CASE
+                        WHEN employee.active = 1 THEN 'ACTIVO'
+                        WHEN employee.active = 0 THEN 'BAJA'
+                        ELSE 'Desconocido'
+                    END AS estado,
+                    CASE
+                        WHEN employee.genre = 1 THEN 'Masculino'
+                        WHEN employee.genre = 0 THEN 'Femenino'
+                        ELSE 'Desconocido'
+                    END AS genero,
+                    employee.genre AS genre_wname,
+                    role.role_id AS role_wname,
+                    role.name AS role_name,
+                    DATE_FORMAT(employee.hire_date, '%d/%m/%Y') AS hire_date,
+                    sup.name AS supervisor,
+                    dept.name AS department,
+                    DATE_FORMAT(employee.update_date, '%d/%m/%Y %H:%i:%s') AS update_date,
+                    employee.nss,
+                    employee.rfc,
+                    employee.curp,
+                    employee.phone,
+                    employee.address,
+                    employee.birth_date,
+                    employee.type as id_type,
+                     CASE
+                        WHEN employee.type = 1 THEN 'RECAM'
+                        WHEN employee.type = 0 THEN 'GPI'
+                        ELSE 'Desconocido'
+                    END AS type
+                FROM employees employee
+                INNER JOIN roles role ON employee.role = role.role_id
+                INNER JOIN departments dept ON role.department = dept.department_id
+                LEFT JOIN employees sup ON dept.supervisor_number = sup.employee_number_id
+                WHERE employee.active = 1
+                ORDER BY employee.employee_number_id ASC";
+
+        $result = mysqli_query($this->db, $sql);
+
+        if ($result) {
+            $users = array();
+
+            while ($row = mysqli_fetch_assoc($result)) {
+                $users[] = $row;
+            }
+
+            $respuesta = array(
+                'error' => false,
+                'msg' => 'Se encontraron los usuarios',
+                'sql' => $sql,
+                'registros' => $users
+            );
+        } else {
+            $respuesta = array(
+                'error' => true,
+                'msg' => 'Error en la consulta: ' . mysqli_error($this->db),
+                'sql' => $sql,
+                'registros' => []
+            );
+        }
+        return json_encode($respuesta);
+    }
     public function crearEmpleado($data)
     {
         mysqli_select_db($this->db, "hr_system");

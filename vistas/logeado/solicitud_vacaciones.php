@@ -3,6 +3,15 @@
 <script>
     //Funcionalidad al cargar la pagina
     $(document).ready(function () {
+
+        $('#switchCheckDefault').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#editFormVac').prop('hidden', true);
+            } else {
+                $('#editFormVac').prop('hidden', true);
+            }
+        });
+
         $('#subirContsIngreso').hide();
         $('#subirContsSalida').hide();
         $('#subirContsVacaciones').hide();
@@ -152,10 +161,18 @@
                     $('#editButton').attr('hidden', true);
                     $('#bajaButton').linkbutton('disable');
                 }
-
+                //Activar Select año adelantado
+                var anioActual = new Date().getFullYear();
+                var indexTab = '';
+                indexTab = $('#userTable2').datagrid('getRowIndex', row);
+                if (row.year > anioActual) {
+                    $('#switchCheckDefault').prop('checked', true);
+                } else {
+                    $('#switchCheckDefault').prop('checked', false);
+                }
+                cargarDias();
             },
             onUnselect: function (index, row) {
-
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#editButton').attr('hidden', false);
                     if (row.estado === 'PROCESO') {
@@ -415,13 +432,18 @@
             let [dia, mes, anio] = fecha.split("/");
             let fechaISO = `${anio}-${mes}-${dia}`;
             let fechaInicial = new Date(fechaISO + 'T00:00:00');
-
-            let fechaActual = new Date();
-
+            var switchElement = document.getElementById("switchCheckDefault");
+            let fechaActual;
+            if (switchElement.checked) {
+                let anioSiguiente = new Date().getFullYear() + 1;
+                fechaActual = new Date(`${anioSiguiente}-01-01T00:00:00`);
+            } else {
+                fechaActual = new Date();
+            }
             fechaInicial.setHours(0, 0, 0, 0);
             fechaActual.setHours(0, 0, 0, 0);
-            // Calcular la diferencia en meses
 
+            // Calcular la diferencia en meses
             let diferenciaMeses =
                 (fechaActual.getFullYear() - fechaInicial.getFullYear()) * 12 +
                 (fechaActual.getMonth() - fechaInicial.getMonth());
@@ -429,26 +451,23 @@
             if (fechaActual.getDate() < fechaInicial.getDate()) {
                 diferenciaMeses--; // No cuenta el mes incompleto
             }
-            // Calcular días de vacaciones según las reglas:
+
+            // Calcular días de vacaciones según las reglas
             let diasCorrespondientes = 0;
 
-
-            if (diferenciaMeses >= 8) {
-                // Calcular los años redondeando hacia abajo
+            if (diferenciaMeses >= 6) {
                 let diferenciaAnios = Math.floor(diferenciaMeses / 12);
 
                 if (diferenciaAnios >= 1 && diferenciaAnios <= 6) {
                     diasCorrespondientes = 12 + (diferenciaAnios - 1) * 2;
                 } else if (diferenciaAnios > 6) {
-                    diasCorrespondientes = 22; // Hasta 6 años
+                    diasCorrespondientes = 22;
                     let aniosExtra = diferenciaAnios - 6;
                     diasCorrespondientes += Math.floor(aniosExtra / 5) * 2;
                 } else {
-                    // Aún no ha cumplido el primer año pero ya pasaron 8 meses
                     diasCorrespondientes = 12;
                 }
             }
-
 
             return diasCorrespondientes;
         }
@@ -503,12 +522,11 @@
                                 if (fechaActual.getDate() < fechaInicial.getDate()) {
                                     diferenciaMeses--; // No cuenta el mes incompleto
                                 }
-                                console.log(diferenciaMeses);
                                 // Calcular días de vacaciones según las reglas:
                                 let diasVacaciones = 0;
 
 
-                                if (diferenciaMeses >= 8) {
+                                if (diferenciaMeses >= 6) {
                                     // Calcular los años redondeando hacia abajo
                                     let diferenciaAnios = Math.floor(diferenciaMeses / 12);
 
@@ -590,7 +608,7 @@
         });
 
         $.ajax({
-            url: 'index.php?c=empleados&m=consultarEmpleados',
+            url: 'index.php?c=empleados&m=consultarEmpleadosSolicitud',
             type: 'POST',
             dataType: 'json',
             cache: false,
@@ -668,7 +686,6 @@
                     }
 
                     if (idTab != null) {
-                        var rowSolicitud = $('#ingresoTable').datagrid('getSelected');
                         $('#userTable2').datagrid('selectRow', idTab);
                     }
 
@@ -683,11 +700,10 @@
                     if (fechaActual.getDate() < fechaInicial.getDate()) {
                         diferenciaMeses--; // No cuenta el mes incompleto
                     }
-                    console.log(diferenciaMeses);
                     // Calcular días de vacaciones según las reglas:
                     let diasVacaciones = 0;
 
-                    if (diferenciaMeses >= 8) {
+                    if (diferenciaMeses >= 6) {
                         // Calcular los años redondeando hacia abajo
                         let diferenciaAnios = Math.floor(diferenciaMeses / 12);
 
@@ -998,7 +1014,7 @@
             backDate.add(1, 'days');
         }
 
-        if (turno === '1' && backDate.day() === 6) {
+        if ((turno === '1' || turno === '2') && backDate.day() === 6) {
             backDate.add(2, 'days');
         }
 
@@ -1508,18 +1524,114 @@
         });
     }
 
-    function mostrarVacaciones() {
+    function mostrarVacaciones(indexTab) {
         const switchElement = document.getElementById("switchCheckDefault");
-        var row = $('#userTable').datagrid('getSelected');
-        var employee_number = row.employee_number_id;
-        tabV(employee_number, null);
+        const row = $('#userTable').datagrid('getSelected');
+        const employee_number = row.employee_number_id;
+
+        tabV(employee_number, function () {
+            $('#userTable2').datagrid('selectRow', indexTab);
+        });
+
         $('#solicitarVac').removeAttr('hidden');
+
         if (switchElement.checked) {
             $('#solicitarVac').linkbutton('enable');
             $('#tt').tabs('select', 'Vacaciones');
         } else {
             $('#solicitarVac').linkbutton('disable');
         }
+    }
+
+    function cargarDias(){
+        var row = $('#userTable').datagrid('getSelected');
+        var employee_number = row.employee_number_id;
+        var switchElement = document.getElementById("switchCheckDefault");
+        console.log(switchElement.checked);
+        let diasSolicitados;
+        $.ajax({
+            url: 'index.php?c=vacaciones&m=consultarSolicitudes',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                employee_number: employee_number,
+                preev_year: switchElement.checked
+            },
+            cache: false,
+            success: function (respuesta) {
+                if (respuesta.error === true) {
+                    $.messager.alert('Error', respuesta.msg, 'error');
+                } else {
+                    diasSolicitados = respuesta.count;
+                    let fechaStr = row.hire_date;
+                    let [fecha, hora] = fechaStr.split(" ");
+                    let [dia, mes, anio] = fecha.split("/");
+                    let fechaISO = `${anio}-${mes}-${dia}`;
+                    let fechaInicial = new Date(fechaISO + 'T00:00:00');
+                    let fechaActual;
+                    if (switchElement.checked) {
+                        let anioSiguiente = new Date().getFullYear() + 1;
+                        fechaActual = new Date(`${anioSiguiente}-01-01T00:00:00`);
+                    } else {
+                        fechaActual = new Date(); // Fecha actual real
+                    }
+
+                    // Normalizar ambas fechas al inicio del día (00:00:00)
+                    fechaActual.setHours(0, 0, 0, 0);
+                    // Calcular la diferencia en meses
+
+                    let diferenciaMeses =
+                        (fechaActual.getFullYear() - fechaInicial.getFullYear()) * 12 +
+                        (fechaActual.getMonth() - fechaInicial.getMonth());
+
+                    if (fechaActual.getDate() < fechaInicial.getDate()) {
+                        diferenciaMeses--; // No cuenta el mes incompleto
+                    }
+                    // Calcular días de vacaciones según las reglas:
+                    let diasVacaciones = 0;
+
+                    if (diferenciaMeses >= 6) {
+                        // Calcular los años redondeando hacia abajo
+                        let diferenciaAnios = Math.floor(diferenciaMeses / 12);
+
+                        if (diferenciaAnios >= 1 && diferenciaAnios <= 6) {
+                            diasVacaciones = 12 + (diferenciaAnios - 1) * 2;
+                        } else if (diferenciaAnios > 6) {
+                            diasVacaciones = 22; // Hasta 6 años
+                            let aniosExtra = diferenciaAnios - 6;
+                            diasVacaciones += Math.floor(aniosExtra / 5) * 2;
+                        } else {
+                            // Aún no ha cumplido el primer año pero ya pasaron 8 meses
+                            diasVacaciones = 12;
+                        }
+                    }
+
+                    // Calcular los días disponibles después de restar los días solicitados
+                    let diasDisponibles = diasVacaciones - diasSolicitados;
+
+                    if (diasDisponibles == 0 && diferenciaMeses >= 16) {
+                        $('#switch_anio_entrante').show();
+                    }
+                    // Mostrar los días disponibles en la etiqueta correspondiente
+
+                    if (switchElement.checked) {
+                        $('#switch_anio_entrante').show();
+                        $('h4[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días");
+                    } else {
+                        $('h4[name="vacationDays"]').text(diasDisponibles > 0 ? `${diasDisponibles} días` : "0 días");
+                    }
+
+                    $('input[name="labelVacationDaysIn"]').val(diasDisponibles);
+
+                    if (diasDisponibles == 0) {
+                        $('#solicitarVac').linkbutton('disable');
+                    } else {
+                        $('#solicitarVac').attr('hidden', false);
+                        $('#solicitarVac').linkbutton('enable');
+                    }
+                }
+            }
+        });
     }
 </script>
 

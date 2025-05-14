@@ -77,7 +77,7 @@
             <!-- Logo -->
             <div class="app-brand justify-content-center">
               <a href="#" class="app-brand-link gap-2">
-                <img src="assets/img/logos/logo.png" width="100%">
+                <img src="assets/img/logos/recam_logo_black.png" width="100%">
               </a>
             </div>
             <form id="formAuthentication" class="mb-3">
