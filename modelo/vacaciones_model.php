@@ -15,25 +15,61 @@ class vacaciones__model
     {
         mysqli_select_db($this->db, "hr_system");
 
-        // Cambiar el año si preev_year es true
+        // Obtener hire_date del empleado
+        $queryFecha = "SELECT hire_date FROM employees WHERE employee_number_id = " . intval($employee_number);
+        $resFecha = mysqli_query($this->db, $queryFecha);
+
         $anio = date('Y');
-        if ($preev_year === true || $preev_year === "true" || $preev_year == 1) {
-            $anio = date('Y', strtotime('+1 year'));
+        $anio_i = null;
+        
+        if ($resFecha && $rowFecha = mysqli_fetch_assoc($resFecha)) {
+            $hireDate = $rowFecha['hire_date']; // formato YYYY-MM-DD
+            $hireMonthDay = date('m-d', strtotime($hireDate));
+            $currentMonthDay = date('m-d');
+            $anio_actual = date('Y');
+        
+            if ($preev_year === true || $preev_year === "true" || $preev_year == 1) {
+                // Periodo adelantado basado en hire_date comparando dia y mes
+                if ($currentMonthDay < $hireMonthDay) {
+                    // No ha llegado el aniversario → periodo adelantado anterior
+                    $anio_i = $anio_actual;       // ej: 2025
+                    $anio = $anio_actual + 1;     // ej: 2026
+                } else {
+                    // Ya pasó aniversario → periodo adelantado siguiente
+                    $anio_i = $anio_actual + 1;   // ej: 2026
+                    $anio = $anio_actual + 2;     // ej: 2027
+                }
+            } else {
+                // lógica normal cuando no es preev_year
+                if ($currentMonthDay < $hireMonthDay) {
+                    $anio_i = $anio_actual - 1;   // ej: 2024
+                    $anio = $anio_actual;         // ej: 2025
+                } else {
+                    $anio_i = $anio_actual;       // ej: 2025
+                    $anio = $anio_actual + 1;     // ej: 2026
+                }
+            }
+        }
+        
+        // Construcción de la consulta
+        $sql = "SELECT SUM(days) AS total_dias 
+            FROM vacation_requests 
+            WHERE state = 2 
+            AND employee_number = " . intval($employee_number) . " 
+            AND year = " . intval($anio);
+
+        // Agrega la condición para year_i si fue definida
+        if (!is_null($anio_i)) {
+            $sql .= " AND year_i = " . intval($anio_i);
         }
 
-        $sql = "SELECT SUM(days) AS total_dias 
-                FROM vacation_requests 
-                WHERE state = 2 
-                AND employee_number = " . intval($employee_number) . " 
-                AND year = " . intval($anio);
-       
         $result = mysqli_query($this->db, $sql);
 
         if ($result) {
             $row = mysqli_fetch_assoc($result);
-            return $row['total_dias'] ?? 0; // Si es NULL, devuelve 0
+            return $row['total_dias'] ?? 0;
         } else {
-            return 0; // Si hay error en la consulta, devuelve 0
+            return 0;
         }
     }
 
@@ -119,6 +155,7 @@ class vacaciones__model
                     vr.request_vacation_id,
                     vr.employee_number,
                     e.name AS employee_name,
+                    e.hire_date,
                     CASE
                         WHEN vr.state = 0 THEN 'CREADA'
                         WHEN vr.state = 1 THEN 'PROCESO'
@@ -133,6 +170,7 @@ class vacaciones__model
                     DATE_FORMAT(vr.back_date, '%d/%m/%Y') AS back_date,
                     vr.work_shift,
                     vr.year,
+                    vr.year_i,
                     c.url as url_doc
                 FROM vacation_requests vr
                 INNER JOIN employees e ON vr.employee_number = e.employee_number_id
@@ -144,7 +182,6 @@ class vacaciones__model
 
 
         $sql .= " ORDER BY vr.state ASC, vr.request_date DESC ";
-
 
 
         $result = mysqli_query($this->db, $sql);
@@ -235,25 +272,78 @@ class vacaciones__model
     public function crearSolicitud($data)
     {
         mysqli_select_db($this->db, "hr_system");
-
+    
         if (!isset($_SESSION)) {
             session_start();
         }
-
+    
         $employee_number = mysqli_real_escape_string($this->db, $data['employee_number']);
-      
-        if ($data['preev_year'] == 'true') {
-            $anioSiguiente = date('Y', strtotime('+1 year'));
-            $sql = "INSERT INTO vacation_requests (employee_number,year) VALUES ('$employee_number',  $anioSiguiente)";
-        } else {
-            $year = date('Y');
-            $sql = "INSERT INTO vacation_requests (employee_number,year) VALUES ('$employee_number',  $year)";
+        $hire_date = isset($data['hire_date']) ? $data['hire_date'] : null;
+    
+        $year = date('Y');
+        $year_i = "NULL"; // valor por defecto
+    
+        // Verificar si ya cumplió un año desde hire_date
+        $cumple_un_anio = false;
+        $hire_date_iso = null;
+    
+        if ($hire_date) {
+            $fecha_parts = explode('/', $hire_date); // dd/mm/yyyy
+            if (count($fecha_parts) === 3) {
+                $hire_date_iso = $fecha_parts[2] . '-' . $fecha_parts[1] . '-' . $fecha_parts[0];
+                $hire_timestamp = strtotime($hire_date_iso);
+                $unAnioDespues = strtotime('+1 year', $hire_timestamp);
+                $ahora = time();
+    
+                if ($ahora >= $unAnioDespues) {
+                    $cumple_un_anio = true;
+                }
+            }
         }
+    
+        if ($data['preev_year'] == 'true') {
+            $hireMonthDay = date('m-d', strtotime($hire_date_iso));
+            $currentMonthDay = date('m-d');
 
+            if ($currentMonthDay >= $hireMonthDay) {
+                $year_i = $year + 1;
+                $year = $year + 2;
+            } else {
+                $year_i = $year;
+                $year = $year + 1;
+            }
+        } else {
+            // Si no es preev_year, pero aún no cumple un año, asignar periodo adelantado (ej. 2025-2026)
+            if (!$cumple_un_anio) {
+                $year_i = $year + 1;
+                $year = $year + 2;
+            } else {
+                // Cumplió un año → periodo normal basado en hire_date
+                if ($hire_date_iso) {
+                    $hireMonthDay = date('m-d', strtotime($hire_date_iso));
+                    $currentMonthDay = date('m-d');
+    
+                    if ($currentMonthDay >= $hireMonthDay) {
+                        $year_i = $year;
+                        $year = $year + 1;
+                    } else {
+                        $year_i = $year - 1;
+                        $year = $year;
+                    }
+                } else {
+                    $year_i = $year;
+                    $year = $year + 1;
+                }
+            }
+        }
+    
+        // Consulta insert (NULL sin comillas)
+        $sql = "INSERT INTO vacation_requests (employee_number, year, year_i)
+                VALUES ('$employee_number', $year, " . ($year_i === "NULL" ? "NULL" : intval($year_i)) . ")";
+    
         $result = mysqli_query($this->db, $sql);
-
+    
         if (!$result) {
-
             $respuesta = array(
                 'error' => true,
                 'msg' => 'Error al insertar: ' . mysqli_error($this->db),
@@ -269,13 +359,16 @@ class vacaciones__model
                 'resultado' => $result,
                 'id' => $lastInsertId,
                 'datos' => $data,
+                'year' => $year,
+                'year_i' => $year_i,
                 'created_by' => $_SESSION['usuario'],
                 'creado' => true,
             );
         }
-
+    
         return json_encode($respuesta);
     }
+    
 
     public function crearSolicitudSI($data)
     {
@@ -289,7 +382,7 @@ class vacaciones__model
         $type_request = mysqli_real_escape_string($this->db, $data['type_request']);
 
         $sql = "INSERT INTO requests (employee_number, type_request) VALUES ('$employee_number', '$type_request')";
-    
+
         $result = mysqli_query($this->db, $sql);
 
         if (!$result) {

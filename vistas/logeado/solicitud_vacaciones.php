@@ -17,9 +17,7 @@
         $('#subirContsVacaciones').hide();
         $('#doc_formato_vac').hide();
         $('#doc_formato').hide();
-        //Obenter el año entrante
-        const anioSiguiente = new Date().getFullYear() + 1;
-        document.getElementById("anioSiguiente").textContent = anioSiguiente;
+
 
         $('#ingresoTable').datagrid({
             singleSelect: true,
@@ -162,14 +160,43 @@
                     $('#bajaButton').linkbutton('disable');
                 }
                 //Activar Select año adelantado
-                var anioActual = new Date().getFullYear();
-                var indexTab = '';
-                indexTab = $('#userTable2').datagrid('getRowIndex', row);
-                if (row.year > anioActual) {
-                    $('#switchCheckDefault').prop('checked', true);
-                } else {
-                    $('#switchCheckDefault').prop('checked', false);
+
+                var rowUser = $('#userTable').datagrid('getSelected');
+                var hire_date = rowUser ? rowUser.hire_date : null;
+
+                if (hire_date) {
+                    const partes = hire_date.split('/');
+                    if (partes.length === 3) {
+                        const hireDay = parseInt(partes[0], 10);
+                        const hireMonth = parseInt(partes[1], 10);
+
+                        const hoy = new Date();
+                        const thisYear = hoy.getFullYear();
+                        const hireThisYear = new Date(thisYear, hireMonth - 1, hireDay);
+
+                        let year_i, year;
+
+                        if (hoy >= hireThisYear) {
+                            // Ya pasó el día y mes del hire_date: periodo 2026-2027
+                            year_i = thisYear + 1;
+                            year = thisYear + 2;
+                        } else {
+                            // Aún no llega el día y mes del hire_date: periodo 2025-2026
+                            year_i = thisYear;
+                            year = thisYear + 1;
+                        }
+
+                        const periodo = `${year_i}-${year}`;
+                        document.getElementById("anioSiguiente").textContent = periodo;
+                        // Activar switch solo si coincide con el periodo adelantado
+                        if (parseInt(row.year_i) == year_i && parseInt(row.year) == year) {
+                            $('#switchCheckDefault').prop('checked', true);
+                        } else {
+                            $('#switchCheckDefault').prop('checked', false);
+                        }
+                    }
                 }
+
                 cargarDias();
             },
             onUnselect: function (index, row) {
@@ -484,6 +511,33 @@
                 tabI(employee_number, null);
                 tabV(employee_number);
 
+                var hire_date = row.hire_date; // formato dd/mm/yyyy
+
+                if (hire_date) {
+                    const partes = hire_date.split('/');
+                    if (partes.length === 3) {
+                        const hireDay = parseInt(partes[0], 10);
+                        const hireMonth = parseInt(partes[1], 10);
+                        const currentDate = new Date();
+                        const currentYear = currentDate.getFullYear();
+
+                        // Crear fecha del aniversario este año
+                        const aniversario = new Date(currentYear, hireMonth - 1, hireDay);
+
+                        let inicio, fin;
+
+                        if (currentDate >= aniversario) {
+                            inicio = currentYear + 1;
+                            fin = currentYear + 2;
+                        } else {
+                            inicio = currentYear;
+                            fin = currentYear + 1;
+                        }
+
+                        const anioSiguiente = inicio + "-" + fin;
+                        document.getElementById("anioSiguiente").textContent = anioSiguiente;
+                    }
+                }
                 function tabV(employee_number) {
                     let diasSolicitados;
                     $.ajax({
@@ -576,6 +630,7 @@
                 $('input[name="labelSupervisor"]').val(row.supervisor);
                 $('#editForm').prop('hidden', false);
                 $('#tt').prop('hidden', false);
+                bajaButton
             },
             onUnselect: function (index, row) {
                 $('#editFormVac').prop('hidden', true);
@@ -603,7 +658,9 @@
                 $('input[name="labelDateRequired"]').prop("disabled", true);
                 $('input[name="labelDateRequest"]').prop("disabled", true);
                 $('#cambiarEstadoI').linkbutton('disable');
-
+                $('#subirContsIngreso').hide();
+                $('#subirContsSalida').hide();
+                $('#subirContsVacaciones').hide();
             }
         });
 
@@ -1295,6 +1352,7 @@
         $.messager.confirm('Confirmación', 'Se creara la solicitud de vacaciones para el empleado' + ' ¿Está seguro?', function (r) {
             if (r) {
                 var employee_number = $('#editID').val();
+                var hire_date = $('#editHireDate').val();
                 $.messager.progress({
                     title: 'Procesando...',
                     msg: 'Por favor espere mientras se crea la solicitud.'
@@ -1305,7 +1363,8 @@
                     dataType: 'json',
                     data: {
                         employee_number: employee_number,
-                        preev_year: switchElement.checked
+                        preev_year: switchElement.checked,
+                        hire_date: hire_date
                     },
                     cache: false,
                     success: function (respuesta) {
@@ -1317,7 +1376,9 @@
                                 var newRow = {
                                     request_vacation_id: respuesta.id,
                                     estado: 'CREADA',
-                                    employee_name: $('#editName').val()
+                                    employee_name: $('#editName').val(),
+                                    year: respuesta.year,
+                                    year_i: respuesta.year_i
                                 }
                                 $('#userTable2').datagrid('insertRow', {
                                     index: 0,
@@ -1543,11 +1604,10 @@
         }
     }
 
-    function cargarDias(){
+    function cargarDias() {
         var row = $('#userTable').datagrid('getSelected');
         var employee_number = row.employee_number_id;
         var switchElement = document.getElementById("switchCheckDefault");
-        console.log(switchElement.checked);
         let diasSolicitados;
         $.ajax({
             url: 'index.php?c=vacaciones&m=consultarSolicitudes',
@@ -1704,10 +1764,12 @@
                                         <div
                                             class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
                                             <!-- Texto de días de vacaciones -->
-                                            <div class="d-flex align-items-center gap-2">
-                                                <p class="mb-0 fw-semibold" id="titleVac">Días disponibles:</p>
+                                            <div class="d-flex flex-column align-items-start gap-1">
                                                 <h4 name="vacationDays" class="mb-0 text-success"></h4>
+                                                <p class="mb-0 fw-semibold" id="titleVac" style="font-size: 14px;">
+                                                    DISPONIBLES</p>
                                             </div>
+
 
                                             <!-- Switch para cambiar de año -->
                                             <div id="switch_anio_entrante" class="p-3 rounded"
@@ -1716,7 +1778,7 @@
                                                     <input class="form-check-input" type="checkbox" role="switch"
                                                         id="switchCheckDefault" onchange="mostrarVacaciones()">
                                                     <label class="form-check-label fw-medium" for="switchCheckDefault">
-                                                        Usar vacaciones del año <span id="anioSiguiente"
+                                                        Usar vacaciones del periodo <span id="anioSiguiente"
                                                             class="fw-bold"></span>
                                                     </label>
                                                 </div>
@@ -1811,9 +1873,9 @@
                                         <th data-options="field:'employee_name',width:270">Nombre</th>
                                         <th data-options="field:'estado',width:90" align="center">Estado</th>
                                         <th data-options="field:'days',width:60" align="center">Dias</th>
-                                        <th data-options="field:'request_date',width:150" align="center">Fecha de
-                                            solicitud</th>
-                                        <th data-options="field:'year',width:60" align="center">Año</th>
+                                        <th data-options="field:'request_date',width:90" align="center">Fecha</th>
+                                        <th data-options="field:'year_i',width:60" align="center">Inicio</th>
+                                        <th data-options="field:'year',width:60" align="center">Fin</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -1862,7 +1924,7 @@
                                     <select id="editTurno" name="labelTurno" class="form-control"
                                         onchange="calculateEndDate()" disabled>
                                         <option value="0">Matutino</option>
-                                        <option value="1">Vespertino</option>
+                                        <option value="1">Nocturno</option>
                                         <option value="2">Mixto</option>
                                     </select>
                                 </div>

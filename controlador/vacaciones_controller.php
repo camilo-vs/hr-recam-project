@@ -32,6 +32,7 @@ class vacaciones_controller
     {
         $data['employee_number'] = $_POST['employee_number'];
         $data['preev_year'] = $_POST['preev_year'];
+        $data['hire_date'] = $_POST['hire_date'];
         echo $this->model->crearSolicitud($data);
     }
 

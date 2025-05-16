@@ -1,3 +1,4 @@
+<link src="assets/css/empleados.css" rel="stylesheet" />
 <script>
     //Funcionalidad al cargar la pagina
     $(document).ready(function () {
@@ -97,6 +98,37 @@
             },
             error: function (xhr, status, error) {
                 console.error("AJAX Error:", error);
+            }
+        });
+        //FUNCIONALIDADES FECHAS REPORTES
+        $('#r_fecha_inicio').datebox({
+            onChange: function (newValue, oldValue) {
+                const fechaFin = $('#r_fecha_fin').datebox('getValue');
+                console.log("llego");
+                if (newValue && fechaFin) {
+                    const inicio = new Date(newValue);
+                    const fin = new Date(fechaFin);
+                    if (inicio > fin) {
+                        $.messager.alert('Validación', 'La fecha de inicio no puede ser mayor que la fecha final.', 'warning');
+                        // Opcional: limpiar el campo que causó el error
+                        $('#r_fecha_inicio').datebox('clear');
+                    }
+                }
+            }
+        });
+
+        $('#r_fecha_fin').datebox({
+            onChange: function (newValue, oldValue) {
+                const fechaInicio = $('#r_fecha_inicio').datebox('getValue');
+                if (newValue && fechaInicio) {
+                    const fin = new Date(newValue);
+                    const inicio = new Date(fechaInicio);
+                    if (fin < inicio) {
+                        $.messager.alert('Validación', 'La fecha final no puede ser menor que la fecha de inicio.', 'warning');
+                        // Opcional: limpiar el campo que causó el error
+                        $('#r_fecha_fin').datebox('clear');
+                    }
+                }
             }
         });
 
@@ -262,9 +294,9 @@
         var userId = row.employee_number_id;
         userData += '&id=' + userId;
         var type = '';
-        if(idType == "1"){
+        if (idType == "1") {
             type = 'RECAM';
-        }else{
+        } else {
             type = 'GPI';
         }
         $.ajax({
@@ -283,7 +315,7 @@
                         var updatedData = {
                             employee_number_id: $('#editID').val(),
                             type: type,
-                            id_type:  $('#editTYPE').val(),
+                            id_type: $('#editTYPE').val(),
                             name: $('#editName').val(),
                             genero: $('#editGenre option:selected').text(),
                             role_name: $('#editRole option:selected').text(),
@@ -325,7 +357,7 @@
                         $('#phone').prop("disabled", true);
                         $('#address').prop("disabled", true);
                         $('#editarUsuario').attr('hidden', true);
-               
+
                         $('#userDialog').dialog('close');
                         $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
                     } else {
@@ -515,7 +547,46 @@
             }
         });
     }
+
+    function openModalReport() {
+        $('#formReporte')[0].reset(); // Resetea el formulario (campos tipo input)
+        $('.easyui-combobox').combobox('clear'); // Limpia los select combobox
+        $('.easyui-datebox').datebox('clear');   // Limpia los campos de fecha
+        $('#modal_report').dialog('open');       // Abre la modal
+    }
+
+    function generarReporte() {
+        const empresa = $('#r_empresa').combobox('getValue');
+        const genero = $('#r_genero').combobox('getValue');
+        const puesto = $('#r_puesto').textbox('getValue');
+        const fechaInicio = $('#r_fecha_inicio').datebox('getValue');
+        const fechaFin = $('#r_fecha_fin').datebox('getValue');
+
+        if (!empresa && !genero && !puesto && !fechaInicio && !fechaFin) {
+            $.messager.alert('Validación', 'Debes llenar al menos un campo para generar el reporte.', 'warning');
+            return;
+        }
+
+        if ((fechaInicio && !fechaFin) || (!fechaInicio && fechaFin)) {
+            $.messager.alert('Validación', 'Debes llenar ambas fechas de ingreso (inicio y fin).', 'warning');
+            return;
+        }
+
+    }
+
+
 </script>
+<style>
+    .btn-cerrar {
+        background: #d9534f;
+        color: white;
+    }
+
+    .btn-generar {
+        background: #5cb85c;
+        color: white;
+    }
+</style>
 
 <body>
     <div class="container-fluid d-flex p-5" style="height: 800px;">
@@ -544,6 +615,8 @@
                 onclick="newUser()">Nuevo Usuario</a>
             <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
                 onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true"
+                onclick="openModalReport()">Generar Reporte</a>
         </div>
 
         <!--MODAL-->
@@ -728,3 +801,57 @@
         </form>
     </div>
 </body>
+
+
+<!-- MODAL REPORTES -->
+<div id="modal_report" class="easyui-dialog" title="Reporte de Empleados" style="width:500px;height:auto;padding:10px"
+    closed="true" modal="true" buttons="#dlg-buttons">
+
+    <form id="formReporte" method="post" style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Empresa -->
+        <div>
+            <label for="empresa">Empresa:</label>
+            <select id="r_empresa" name="empresa" class="easyui-combobox" style="width:100%" editable="false"
+                panelHeight="auto">
+                <option value="">-- Selecciona una empresa --</option>
+                <option value="GPI">GPI</option>
+                <option value="RECAM">RECAM</option>
+            </select>
+        </div>
+
+        <!-- Rango de fechas de ingreso -->
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-weight: bold;">Fecha de ingreso:</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <label for="fecha_inicio">Inicio:</label>
+                <input id="r_fecha_inicio" name="fecha_inicio" class="easyui-datebox" style="width:45%">
+                <label for="fecha_fin">Fin:</label>
+                <input id="r_fecha_fin" name="fecha_fin" class="easyui-datebox" style="width:45%">
+            </div>
+        </div>
+
+        <!-- Género -->
+        <div>
+            <label for="genero">Género:</label>
+            <select id="r_genero" name="genero" class="easyui-combobox" style="width:100%" editable="false"
+                panelHeight="auto">
+                <option value="">-- Selecciona género --</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="O">Otro</option>
+            </select>
+        </div>
+
+        <!-- Puesto -->
+        <div>
+            <label for="puesto">Puesto:</label>
+            <input id="r_puesto" name="puesto" class="easyui-textbox" style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="dlg-buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton btn-generar" onclick="generarReporte()">Generar</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton btn-cerrar"
+        onclick="$('#modal_report').dialog('close')">Cerrar</a>
+</div>
