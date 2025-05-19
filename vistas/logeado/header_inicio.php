@@ -19,6 +19,8 @@
   <script type="text/javascript" src="assets/easyui/js/jquery.min.js"></script>
   <script type="text/javascript" src="assets/easyui/js/jquery.easyui.min.js"></script>
   <script type="text/javascript" src="assets/easyui/filter/datagrid-filter.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
   <style>
     .bd-placeholder-img {
       font-size: 1.125rem;

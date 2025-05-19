@@ -5,7 +5,8 @@
         "tecnickcom/tcpdf": "^6.8",
         "moment/moment": "^2.30",
         "knplabs/knp-snappy": "^1.5",
-        "dompdf/dompdf": "*"
+        "dompdf/dompdf": "*",
+        "phpoffice/phpspreadsheet": "*"
     },
     "config": {
         "allow-plugins": {

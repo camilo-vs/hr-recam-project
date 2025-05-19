@@ -88,4 +88,14 @@ class empleados_controller
         echo $this->model->cambiarEstado($data);
     }
     
+    public function generarReporte()
+    {
+        $data['empresa'] = $_REQUEST['empresa']?? '';
+        $data['genero'] = $_REQUEST['genero']?? '';
+        $data['puesto'] = $_REQUEST['puesto']?? '';
+        $data['fechaInicio'] = $_REQUEST['fechaInicio']?? '';
+        $data['fechaFin'] = $_REQUEST['fechaFin']?? '';
+        
+        echo $this->model->generarReporte($data);
+    }
 }

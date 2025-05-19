@@ -79,6 +79,12 @@
                 if (respuesta.error) {
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
+                    $('#r_puesto').combobox({
+                        data: respuesta.departamentos,
+                        valueField: 'role_id',
+                        textField: 'name',
+                        panelHeight: 'auto'
+                    });
                     // Vaciar el select y agregar opción por defecto
                     var select = $('#editRole');
                     select.empty();
@@ -409,7 +415,16 @@
                                         minute: '2-digit',
                                         second: '2-digit'
                                     }).replace(",", ""),
-                                    updated_by: respuesta.created_by
+                                    updated_by: respuesta.created_by,
+                                    change_date: new Date().toLocaleString('es-ES', {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    }).replace(",", ""),
+                                    change_type: respuesta.id_updated.toUpperCase()
                                 };
 
                                 $('#userTable').datagrid('updateRow', {
@@ -549,10 +564,13 @@
     }
 
     function openModalReport() {
-        $('#formReporte')[0].reset(); // Resetea el formulario (campos tipo input)
-        $('.easyui-combobox').combobox('clear'); // Limpia los select combobox
-        $('.easyui-datebox').datebox('clear');   // Limpia los campos de fecha
+        $('#r_empresa').combobox('setValue', '');
+        $('#r_genero').combobox('setValue', '');
+        $('#r_puesto').combobox('setValue', '');
+        $('#r_fecha_inicio').datebox('clear');
+        $('#r_fecha_fin').datebox('clear');
         $('#modal_report').dialog('open');       // Abre la modal
+
     }
 
     function generarReporte() {
@@ -572,6 +590,47 @@
             return;
         }
 
+        $.ajax({
+            url: 'index.php?c=empleados&m=generarReporte',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                empresa: empresa,
+                genero: genero,
+                puesto: puesto,
+                fechaInicio: fechaInicio,
+                fechaFin: fechaFin
+            },
+            cache: false,
+            success: function (respuesta) {
+                if (!respuesta || !respuesta.registros || respuesta.registros.length === 0) {
+                    $.messager.alert('Info', 'No se encontraron datos para el reporte.', 'info');
+                    return;
+                }
+
+                // Obtener fecha y hora actual para el nombre del archivo
+                const ahora = new Date();
+                const yyyy = ahora.getFullYear();
+                const mm = String(ahora.getMonth() + 1).padStart(2, '0');
+                const dd = String(ahora.getDate()).padStart(2, '0');
+                const hh = String(ahora.getHours()).padStart(2, '0');
+                const min = String(ahora.getMinutes()).padStart(2, '0');
+                const ss = String(ahora.getSeconds()).padStart(2, '0');
+
+                const nombreArchivo = `reporte_empleados_${yyyy}-${mm}-${dd}_${hh}-${min}-${ss}.xlsx`;
+
+                // Crear hoja de cálculo y libro
+                const worksheet = XLSX.utils.json_to_sheet(respuesta.registros);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
+
+                // Descargar archivo Excel con fecha/hora
+                XLSX.writeFile(workbook, nombreArchivo);
+            },
+            error: function (xhr, status, error) {
+                console.error("Error AJAX:", error);
+            }
+        });
     }
 
 
@@ -589,128 +648,60 @@
 </style>
 
 <body>
-    <div class="container-fluid d-flex p-5" style="height: 800px;">
-        <!-- Primera sección (70%) con margen -->
-        <!--TABLA DE LOS USUARIOS-->
-        <table id="userTable" class="easyui-datagrid" title="Gestion de usuarios" style="width:65.7%;height:100%"
-            data-options="singleSelect:true,collapsible:true" toolbar="#toolbar">
-            <thead>
-                <tr>
-                    <th data-options="field:'employee_number_id',width:50" align="center">Num Emp</th>
-                    <th data-options="field:'name',width:250">Nombre</th>
-                    <th data-options="field:'type',width:100" align="center">Empresa</th>
-                    <th data-options="field:'estado',width:100" align="center">Estado</th>
-                    <th data-options="field:'department',width:130" align="center">Departamento</th>
-                    <th data-options="field:'role_name',width:200">Cargo</th>
-                    <th data-options="field:'supervisor',width:165">Supervisor</th>
-                    <th data-options="field:'hire_date',width:155" align="center">Fecha de alta</th>
-                    <th data-options="field:'role_wname',width:155" hidden></th>
-                    <th data-options="field:'genre_wname',width:155" hidden></th>
-                </tr>
-            </thead>
-        </table>
-        <!-- Botones de la tabla -->
-        <div id="toolbar">
-            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                onclick="newUser()">Nuevo Usuario</a>
-            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
-                onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
-            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true"
-                onclick="openModalReport()">Generar Reporte</a>
-        </div>
+<div class="container-fluid py-4">
+    <!-- Tabla de usuarios -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <table id="userTable" class="easyui-datagrid w-100" title="Gestión de usuarios"
+                style="height:360px;" data-options="singleSelect:true,collapsible:true" toolbar="#toolbar">
+                <thead>
+                    <tr>
+                        <th data-options="field:'employee_number_id',width:100" align="center">Num Emp</th>
+                        <th data-options="field:'name',width:280">Nombre</th>
+                        <th data-options="field:'type',width:100" align="center">Empresa</th>
+                        <th data-options="field:'estado',width:100" align="center">Estado</th>
+                        <th data-options="field:'department',width:130" align="center">Departamento</th>
+                        <th data-options="field:'role_name',width:240">Cargo</th>
+                        <th data-options="field:'supervisor',width:280">Supervisor</th>
+                        <th data-options="field:'hire_date',width:155" align="center">Fecha de alta</th>
+                        <th data-options="field:'change_date',width:280" align="center">Cambio de estado</th>
+                        <th data-options="field:'change_type',width:155" align="center">Realizado</th>
+                        <th data-options="field:'role_wname',width:155" hidden></th>
+                        <th data-options="field:'genre_wname',width:155" hidden></th>
+                    </tr>
+                </thead>
+            </table>
 
-        <!--MODAL-->
-        <div id="userDialog" class="easyui-dialog" title="Crear Usuario" style="width:600px;height:auto;padding:10px"
-            closed="true" buttons="#dlg-buttons">
-            <form id="userForm" method="post">
-                <div class="row">
-                    <div class="col-md-6 py-2">
-                        <label for="new_hire_date">Fecha de ingreso:</label>
-                        <input id="new_hire_date" name="new_hire_date" type="date" class="form-control" required>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="employee_number_id">Número de empleado:</label>
-                        <input id="employee_number_id" name="employee_number_id" type="number" class="form-control"
-                            required>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="username">Nombre:</label>
-                        <input id="username" name="username" type="text" class="form-control" required>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="genero">Género:</label>
-                        <select id="genero" name="genero" class="form-control">
-                            <option value="0">Femenino</option>
-                            <option value="1">Masculino</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="puesto">Puesto:</label>
-                        <select id="puesto" name="puesto" class="form-control"></select>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="new_nss">NSS:</label>
-                        <input id="new_nss" name="new_nss" pattern="^\d{11}$" maxlength="11" minlength="11" type="text"
-                            class="form-control" title="Debe contener exactamente 11 dígitos numéricos">
-                        <small id="nssError" class="text-danger"></small>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="new_curp">CURP:</label>
-                        <input id="new_curp" pattern="^[a-zA-Z0-9]{18}$" maxlength="18"
-                            title="CURP inválida. Debe tener 18 caracteres alfanuméricos según el formato oficial"
-                            name="new_curp" type="text" class="form-control">
-                        <small id="curpError" class="text-danger"></small>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="new_rfc">RFC:</label>
-                        <input id="new_rfc" name="new_rfc" pattern="^[a-zA-Z0-9]{13}$" maxlength="13"
-                            title="RFC inválido. Debe tener 12 o 13 caracteres con el formato correcto" type="text"
-                            class="form-control">
-                        <small id="rfcError" class="text-danger"></small>
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="new_birth_date">Fecha de nacimiento:</label>
-                        <input id="new_birth_date" name="new_birth_date" type="date" class="form-control">
-                    </div>
-                    <div class="col-md-6 py-2">
-                        <label for="new_phone">Teléfono:</label>
-                        <input id="new_phone" name="new_phone" pattern="^\d{10}$" maxlength="10" minlength="10"
-                            title="Debe contener exactamente 10 dígitos numéricos" type="tel" class="form-control">
-                        <small id="phoneError" class="text-danger"></small>
-                    </div>
-                    <div class="col-md-12 py-2">
-                        <label for="new_address">Dirección:</label>
-                        <textarea id="new_address" name="new_address" class="form-control" rows="2"></textarea>
-                    </div>
-                </div>
-            </form>
+            <!-- Botones de la tabla -->
+            <div id="toolbar" class="mt-2">
+                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
+                    onclick="newUser()">Nuevo Usuario</a>
+                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
+                    onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
+                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true"
+                    onclick="openModalReport()">Generar Reporte</a>
+            </div>
         </div>
-        <!-- Botones del modal -->
-        <div id="dlg-buttons">
-            <button type="button" class="btn btn-success" id="crearUsuario" onclick="submitForm()">Crear</button>
-            <button type="button" class="btn btn-danger" onclick="$('#userDialog').dialog('close')">Cancelar</button>
-        </div>
+    </div>
 
-        <!-- Segunda sección (30%) -->
-        <form id="editForm" action="post">
-            <div class="container" style="width: 600px;">
-                <div class="row">
-                    <h2 class="col-sm-2">Detalles</h2>
-                    <div class="col-sm-7"></div>
-                    <a href="javascript:void(0)" class="easyui-linkbutton col-sm-3" iconCls="icon-edit" plain="true"
-                        onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-sm-3">
-                        <div class="input-group mb-2">
-                            <span class="input-group-text" id="basic-addon1">#</span>
-                            <input type="text" class="form-control" name="labelEmployeeNumberId" id="editID"
-                                aria-describedby="basic-addon1" disabled>
+    <!-- Formulario de edición -->
+    <div class="row">
+        <div class="col-12">
+            <form id="editForm">
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Detalles del Usuario</h4>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true"
+                            onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <label>#</label>
+                            <input type="text" class="form-control" id="editID" name="labelEmployeeNumberId" disabled>
                         </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="input-group mb-2">
-                            <span class="input-group-text" id="basic-addon1">EMPRESA</span>
+                        <div class="col-md-8">
+                            <label>Empresa</label>
                             <select id="editTYPE" name="labelType" class="form-control" disabled>
                                 <option value=""></option>
                                 <option value="0">GPI</option>
@@ -718,90 +709,162 @@
                             </select>
                         </div>
                     </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-sm-12">
-                        <p class="mb-0">Nombe:</p>
+
+                    <div class="mb-2">
+                        <label>Nombre</label>
                         <input type="text" class="form-control" id="editName" name="labelName" disabled>
                     </div>
-                    <div class="col-sm-6">
-                        <p class="mb-0">Fecha de ingreso:</p>
-                        <input type="text" class="form-control" name="labelHireDate" readonly disabled>
+
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label>Fecha de ingreso</label>
+                            <input type="text" class="form-control" name="labelHireDate" readonly disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Género</label>
+                            <select id="editGenre" name="labelGenre" class="form-control" disabled>
+                                <option value=""></option>
+                                <option value="0">Femenino</option>
+                                <option value="1">Masculino</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        <p class="mb-0">Genero:</p>
-                        <select id="editGenre" name="labelGenre" class="form-control" disabled>
-                            <option value=""></option>
-                            <option value="0">Femenino</option>
-                            <option value="1">Masculino</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row mb-2">
+
                     <div class="mb-2">
-                        <p class="mb-0">NSS:</p>
+                        <label>NSS</label>
                         <input type="text" class="form-control" id="nss" name="nss" disabled>
                     </div>
-                </div>
-                <div class="row mb-2">
+
                     <div class="mb-2">
-                        <p class="mb-0">CURP:</p>
+                        <label>CURP</label>
                         <input type="text" class="form-control" id="curp" name="curp" disabled>
                     </div>
-                </div>
-                <div class="row mb-2">
+
                     <div class="mb-2">
-                        <p class="mb-0">RFC:</p>
+                        <label>RFC</label>
                         <input type="text" class="form-control" id="rfc" name="rfc" disabled>
                     </div>
-                </div>
-                <hr />
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <p class="mb-0">Fecha de nacimiento:</p>
-                        <input type="date" class="form-control" id="birth_date" name="birth_date" disabled>
+
+                    <hr>
+
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label>Fecha de nacimiento</label>
+                            <input type="date" class="form-control" id="birth_date" name="birth_date" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Teléfono</label>
+                            <input type="number" class="form-control" id="phone" name="phone" disabled>
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        <p class="mb-0">Telefono:</p>
-                        <input type="number" class="form-control" id="phone" name="phone" disabled>
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="mb-12">
-                        <p class="mb-0">Dirección:</p>
+
+                    <div class="mb-2">
+                        <label>Dirección</label>
                         <input type="text" class="form-control" id="address" name="address" disabled>
                     </div>
-                </div>
-                <hr />
-                <div class="row mb-2">
-                    <div class="col">
-                        <p class="mb-0">Puesto del empleado:</p>
-                        <select id="editRole" name="labelRole" class="form-control" onchange="consultarDatosExtra()"
-                            disabled>
-                        </select>
+
+                    <hr>
+
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label>Puesto del empleado</label>
+                            <select id="editRole" name="labelRole" class="form-control"
+                                onchange="consultarDatosExtra()" disabled></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Departamento</label>
+                            <input type="text" class="form-control" id="editDepartment" name="labelDepartment"
+                                disabled>
+                        </div>
                     </div>
-                    <div class="col">
-                        <p class="mb-0">Departamento:</p>
-                        <input type="text" class="form-control" id="editDepartment" name="labelDepartment" disabled>
-                    </div>
-                </div>
-                <div class="row mb-2">
+
                     <div class="mb-2">
-                        <p class="mb-0">Supervisor:</p>
+                        <label>Supervisor</label>
                         <input type="text" class="form-control" id="editSupervisor" name="labelSupervisor" disabled>
                     </div>
-                </div>
-                <div class="row mb-5">
-                    <div class="mb-2">
-                        <button type="button" class="btn btn-warning" id="editarUsuario" onclick="updateForm()"
-                            style="width: 100%;" hidden>Editar</button>
+
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-warning w-100" id="editarUsuario"
+                            onclick="updateForm()" hidden>Editar</button>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
+</div>
+
 </body>
 
+<!--MODAL-->
+<div id="userDialog" class="easyui-dialog" title="Crear Usuario" style="width:600px;height:auto;padding:10px"
+    closed="true" buttons="#dlg-buttons">
+    <form id="userForm" method="post">
+        <div class="row">
+            <div class="col-md-6 py-2">
+                <label for="new_hire_date">Fecha de ingreso:</label>
+                <input id="new_hire_date" name="new_hire_date" type="date" class="form-control" required>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="employee_number_id">Número de empleado:</label>
+                <input id="employee_number_id" name="employee_number_id" type="number" class="form-control" required>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="username">Nombre:</label>
+                <input id="username" name="username" type="text" class="form-control" required>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="genero">Género:</label>
+                <select id="genero" name="genero" class="form-control">
+                    <option value="0">Femenino</option>
+                    <option value="1">Masculino</option>
+                </select>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="puesto">Puesto:</label>
+                <select id="puesto" name="puesto" class="form-control"></select>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="new_nss">NSS:</label>
+                <input id="new_nss" name="new_nss" pattern="^\d{11}$" maxlength="11" minlength="11" type="text"
+                    class="form-control" title="Debe contener exactamente 11 dígitos numéricos">
+                <small id="nssError" class="text-danger"></small>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="new_curp">CURP:</label>
+                <input id="new_curp" pattern="^[a-zA-Z0-9]{18}$" maxlength="18"
+                    title="CURP inválida. Debe tener 18 caracteres alfanuméricos según el formato oficial"
+                    name="new_curp" type="text" class="form-control">
+                <small id="curpError" class="text-danger"></small>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="new_rfc">RFC:</label>
+                <input id="new_rfc" name="new_rfc" pattern="^[a-zA-Z0-9]{13}$" maxlength="13"
+                    title="RFC inválido. Debe tener 12 o 13 caracteres con el formato correcto" type="text"
+                    class="form-control">
+                <small id="rfcError" class="text-danger"></small>
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="new_birth_date">Fecha de nacimiento:</label>
+                <input id="new_birth_date" name="new_birth_date" type="date" class="form-control">
+            </div>
+            <div class="col-md-6 py-2">
+                <label for="new_phone">Teléfono:</label>
+                <input id="new_phone" name="new_phone" pattern="^\d{10}$" maxlength="10" minlength="10"
+                    title="Debe contener exactamente 10 dígitos numéricos" type="tel" class="form-control">
+                <small id="phoneError" class="text-danger"></small>
+            </div>
+            <div class="col-md-12 py-2">
+                <label for="new_address">Dirección:</label>
+                <textarea id="new_address" name="new_address" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- Botones del modal -->
+<div id="dlg-buttons">
+    <button type="button" class="btn btn-success" id="crearUsuario" onclick="submitForm()">Crear</button>
+    <button type="button" class="btn btn-danger" onclick="$('#userDialog').dialog('close')">Cancelar</button>
+</div>
 
 <!-- MODAL REPORTES -->
 <div id="modal_report" class="easyui-dialog" title="Reporte de Empleados" style="width:500px;height:auto;padding:10px"
@@ -845,7 +908,7 @@
         <!-- Puesto -->
         <div>
             <label for="puesto">Puesto:</label>
-            <input id="r_puesto" name="puesto" class="easyui-textbox" style="width:100%">
+            <select id="r_puesto" name="puesto" class="easyui-combobox" editable="false" style="width:100%"></select>
         </div>
     </form>
 </div>

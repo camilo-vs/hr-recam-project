@@ -89,13 +89,16 @@ class usuarios_model
                 $values .= "'" . $contraseñaHash . "',";
                 $values .= "" . $data['userType'] . ",";
                 $values .= "" . $_SESSION['id'] . ",";
+                $values .= "1,";
                 $values = rtrim($values, ',');
+
 
                 $sql = "INSERT INTO users (
                         name, 
                         password,
                         user_type,
-                        created_by) 
+                        created_by,
+                        active) 
                         VALUES (" . $values . ")";
 
                 $result = mysqli_query($this->db, $sql);
