@@ -119,6 +119,7 @@ class empleados__model
                 employee.address,
                 employee.birth_date,
                 employee.type as id_type,
+                employee.url_img,
                 CASE
                     WHEN employee.type = 1 THEN 'RECAM'
                     WHEN employee.type = 0 THEN 'GPI'
@@ -327,84 +328,68 @@ class empleados__model
 
     public function editarEmpleado($data)
     {
-
         mysqli_select_db($this->db, "hr_system");
 
         if (!isset($_SESSION)) {
             session_start();
         }
 
-        // Se arma la cadena SET con todos los campos a actualizar
         $set = "";
         $set .= "employee_number_id = '" . $data['employee_number_change'] . "', ";
-        if ($data['editTYPE'] != '') {
-            $set .= "type = '" . $data['editTYPE'] . "', ";
-        } else {
-            $set .= "type = null, ";
-        }
+        $set .= ($data['editTYPE'] != '') ? "type = '" . $data['editTYPE'] . "', " : "type = null, ";
         $set .= "name = '" . $data['username'] . "', ";
         $set .= "genre = '" . $data['genero'] . "', ";
         $set .= "role = '" . $data['role'] . "', ";
-        if ($data['nss'] != '') {
-            $set .= "nss = '" . $data['nss'] . "', ";
-        } else {
-            $set .= "nss = null, ";
+        $set .= ($data['nss'] != '') ? "nss = '" . $data['nss'] . "', " : "nss = null, ";
+        $set .= ($data['curp'] != '') ? "curp = '" . $data['curp'] . "', " : "curp = curp, ";
+        $set .= ($data['rfc'] != '') ? "rfc = '" . $data['rfc'] . "', " : "rfc = null, ";
+        $set .= ($data['birth_date'] != '') ? "birth_date = '" . $data['birth_date'] . "', " : "birth_date = null, ";
+        $set .= ($data['phone'] != '') ? "phone = '" . $data['phone'] . "', " : "phone = null, ";
+        $set .= ($data['address'] != '') ? "address = '" . $data['address'] . "', " : "address = null, ";
+
+        if (isset($data['imagen']) && is_array($data['imagen']) && $data['imagen']['tmp_name'] != '') {
+            $extension = pathinfo($data['imagen']['name'], PATHINFO_EXTENSION);
+            $nombreArchivo = 'empleado_' . $data['employee_number_change'] . '.' . $extension;
+            $rutaDestino = 'assets/img/empleados/' . $nombreArchivo;
+
+            if (file_exists($rutaDestino)) {
+                unlink($rutaDestino);
+            }
+
+            if (move_uploaded_file($data['imagen']['tmp_name'], $rutaDestino)) {
+                $set .= "url_img = '" . $rutaDestino . "', ";
+            }
         }
-        if ($data['curp'] != '') {
-            $set .= "curp = '" . $data['curp'] . "', ";
-        } else {
-            $set .= "curp = curp, ";
-        }
-        if ($data['rfc'] != '') {
-            $set .= "rfc = '" . $data['rfc'] . "', ";
-        } else {
-            $set .= "rfc = null, ";
-        }
-        if ($data['birth_date'] != '') {
-            $set .= "birth_date = '" . $data['birth_date'] . "', ";
-        } else {
-            $set .= "birth_date = null, ";
-        }
-        if ($data['phone'] != '') {
-            $set .= "phone = '" . $data['phone'] . "', ";
-        } else {
-            $set .= "phone = null, ";
-        }
-        if ($data['address'] != '') {
-            $set .= "address = '" . $data['address'] . "', ";
-        } else {
-            $set .= "address = null, ";
-        }
+
         $set .= "updated_by = " . $_SESSION['id'] . ", ";
         $set .= "update_date = NOW()";
 
-        // Se utiliza employee_number_id (el id único del empleado) para identificar el registro a actualizar
-        $condicion = "employee_number_id = " . $data['employee_number_id'];
+        $condicion = "employee_number_id = '" . $data['employee_number_id'] . "'";
+        $sqlUpdate = "UPDATE employees SET $set WHERE $condicion";
 
-        $sqlUpdate = "UPDATE employees SET " . $set . " WHERE " . $condicion;
         $resultUpdate = mysqli_query($this->db, $sqlUpdate);
 
         if (!$resultUpdate) {
-            $respuesta = array(
+            $respuesta = [
                 'error' => true,
                 'msg' => 'Error al actualizar: ' . mysqli_error($this->db),
                 'sql' => $sqlUpdate,
-                'respuesta' => $resultUpdate
-            );
+            ];
         } else {
-            $respuesta = array(
+            $respuesta = [
                 'error' => false,
                 'msg' => 'Todo Bien',
                 'sql' => $sqlUpdate,
-                'respuesta' => $resultUpdate,
                 'cambio' => true,
                 'datos' => $data,
-                'id_updated' => $_SESSION['usuario']
-            );
+                'url' => $rutaDestino,
+                'created_by' => $_SESSION['usuario']
+            ];
         }
 
         return json_encode($respuesta);
     }
+
 
 
     public function cambiarEstado($data)
@@ -559,7 +544,7 @@ class empleados__model
 
         $condiciones = " WHERE 1 = 1 ";
 
-        if (!empty($data['empresa'])) {
+        if ($data['empresa'] != '') {
             $empresa = mysqli_real_escape_string($this->db, $data['empresa']);
             $condiciones .= " AND employee.type = '$empresa'";
         }
@@ -584,8 +569,19 @@ class empleados__model
             $condiciones .= " AND employee.hire_date BETWEEN '$fechaInicio' AND '$fechaFin'";
         }
 
+        if ($data['estado'] != '') {
+            $estado = mysqli_real_escape_string($this->db, $data['estado']);
+            $condiciones .= " AND employee.active = '$estado'";
+        }
+
+
         $sql = "SELECT
                     employee.employee_number_id as NUMERO_DE_EMPLEADO,
+                        CASE
+                        WHEN employee.type = 1 THEN 'RECAM'
+                        WHEN employee.type = 0 THEN 'GPI'
+                        ELSE 'Desconocido'
+                    END AS EMPRESA,
                     employee.name as NOMBRE_DEL_EMPLEADO,
                     CASE
                         WHEN employee.active = 1 THEN 'ACTIVO'
@@ -597,7 +593,6 @@ class empleados__model
                         WHEN employee.genre = 0 THEN 'Femenino'
                         ELSE 'Desconocido'
                     END AS GENERO,
-                    role.role_id AS role_wname,
                     role.name AS PUESTO_DEL_EMPLEADO,
                     DATE_FORMAT(employee.hire_date, '%d/%m/%Y') AS FECHA_DE_ALTA,
                     sup.name AS SUPERVISOR,
@@ -607,12 +602,8 @@ class empleados__model
                     employee.curp AS CURP,
                     employee.phone AS TELEFONO,
                     employee.address AS DIRECCION,
-                    DATE_FORMAT(employee.birth_date, '%d/%m/%Y') AS FECHA_DE_NACIMIENTO,
-                    CASE
-                        WHEN employee.type = 1 THEN 'RECAM'
-                        WHEN employee.type = 0 THEN 'GPI'
-                        ELSE 'Desconocido'
-                    END AS EMPRESA
+                    DATE_FORMAT(employee.birth_date, '%d/%m/%Y') AS FECHA_DE_NACIMIENTO
+                
                 FROM employees employee
                 INNER JOIN roles role ON employee.role = role.role_id
                 INNER JOIN departments dept ON role.department = dept.department_id

@@ -77,6 +77,9 @@ class empleados_controller
         $data['phone'] = $_POST['phone'];
         $data['address'] = $_POST['address'];
     
+        if (!empty($_FILES['imagen']['tmp_name'])) {
+            $data['imagen'] = $_FILES['imagen'];
+        }
         echo $this->model->editarEmpleado($data);
     }
     
@@ -95,6 +98,7 @@ class empleados_controller
         $data['puesto'] = $_REQUEST['puesto']?? '';
         $data['fechaInicio'] = $_REQUEST['fechaInicio']?? '';
         $data['fechaFin'] = $_REQUEST['fechaFin']?? '';
+        $data['estado'] = $_REQUEST['estado']?? '';
         
         echo $this->model->generarReporte($data);
     }

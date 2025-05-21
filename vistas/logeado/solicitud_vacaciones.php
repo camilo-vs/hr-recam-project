@@ -1021,28 +1021,25 @@
             return;
         }
 
-        // Feriados por año
         const feriadosPorAnio = {
             2025: [
-                '2025-01-01', // Año Nuevo
-                '2025-02-03', // Día de la Constitución (trasladado)
-                '2025-03-17', // Natalicio de Benito Juárez (trasladado)
-                '2025-05-01', // Día del Trabajo
-                '2025-09-16', // Día de la Independencia
-                '2025-11-17', // Día de la Revolución Mexicana (trasladado)
-                '2025-12-25',  // Navidad
-                '2026-01-01'  // Año Nuevo
+                '2025-01-01', '2025-02-03', '2025-03-17', '2025-05-01',
+                '2025-09-16', '2025-11-17', '2025-12-25', '2026-01-01'
             ],
         };
 
-        // Verifica si una fecha es laboral (no domingo ni feriado)
         function isWorkingDay(date) {
             const year = date.year();
             const feriados = feriadosPorAnio[year] || [];
+
+            // For turno 1 or 2, Saturday is not a working day
+            if ((turno === '1' || turno === '2') && date.day() === 6) {
+                return false;
+            }
+
             return date.day() !== 0 && !feriados.includes(date.format('YYYY-MM-DD'));
         }
 
-        // Calcular fecha final considerando días laborables
         function calculatePreciseEndDate(startDate, totalWorkingDays) {
             let currentDate = moment(startDate);
             let workingDaysCount = isWorkingDay(currentDate) ? 1 : 0;
@@ -1057,24 +1054,25 @@
         }
 
         let endDate = calculatePreciseEndDate(startDate, days);
-
-        // Si turno es 1 o 2 y termina en sábado, mover a lunes
-        if ((turno === '1' || turno === '2') && endDate.day() === 6) {
-            endDate.add(2, 'days');
-        }
-
         endDateInput.val(endDate.format('YYYY-MM-DD'));
 
-        // Calcular fecha de reincorporación
+        // Calculate back date (reincorporación)
+        function isValidBackDate(date, turno) {
+            const year = date.year();
+            const feriados = feriadosPorAnio[year] || [];
+
+            // Sábado (6) y domingo (0) no válidos para turno 1 o 2
+            if ((turno === '1' || turno === '2') && (date.day() === 0 || date.day() === 6)) {
+                return false;
+            }
+
+            return !feriados.includes(date.format('YYYY-MM-DD'));
+        }
+
         let backDate = moment(endDate).add(1, 'days');
-        while (!isWorkingDay(backDate)) {
+        while (!isValidBackDate(backDate, turno)) {
             backDate.add(1, 'days');
         }
-
-        if ((turno === '1' || turno === '2') && backDate.day() === 6) {
-            backDate.add(2, 'days');
-        }
-
         backDateInput.val(backDate.format('YYYY-MM-DD'));
     }
 

@@ -2,18 +2,24 @@
 <script>
     //Funcionalidad al cargar la pagina
     $(document).ready(function () {
-
+        $('#cont_estado').hide();
+        $('#cont_f_estado').hide();
+        $('#btn_edit_img').hide();
         $('#userTable').datagrid({
             onSelect: function (index, row) {
                 // Deshabilitar y habilitar botón según el estado
                 if (row.estado !== 'BAJA') {
+                    $('#cont_estado').hide();
+                    $('#cont_f_estado').hide();
                     $('#editButton').linkbutton('enable');
                     $('#bajaButton').linkbutton('enable');
                 } else {
+                    $('#cont_estado').show();
+                    $('#cont_f_estado').show();
                     $('#editButton').linkbutton('disable');
                     $('#bajaButton').linkbutton('enable');
+                    $('#chan_f_b').val(row.change_date);
                 }
-
                 $('input[name="labelEmployeeNumberId"]').val(row.employee_number_id);
                 $('input[name="labelName"]').val(row.name);
                 $('input[name="labelHireDate"]').val(row.hire_date);
@@ -28,6 +34,12 @@
                 $('input[name="labelDepartment"]').val(row.department);
                 $('input[name="labelSupervisor"]').val(row.supervisor);
                 $('#editTYPE').val(row.id_type);
+                $('#btn_edit_img').hide();
+                if (row.url_img == '' || row.url_img == null) {
+                    document.getElementById('preview-imagen').src = "assets/img/empleados/sin_imagen.png";
+                } else {
+                    document.getElementById('preview-imagen').src = row.url_img;
+                }
             },
             onUnselect: function (index, row) {
                 // Deshabilitar botones cuando se deselecciona la fila
@@ -138,6 +150,17 @@
             }
         });
 
+        document.getElementById('input-imagen').addEventListener('change', function (e) {
+            const archivo = e.target.files[0];
+            if (archivo) {
+                const lector = new FileReader();
+                lector.onload = function (event) {
+                    document.getElementById('preview-imagen').src = event.target.result;
+                }
+                lector.readAsDataURL(archivo);
+            }
+        });
+
     });
 
     function newUser() {
@@ -163,6 +186,7 @@
         $('#direaccion').prop("disabled", false);
         $('#editTYPE').prop("disabled", false);
         $('#editarUsuario').removeAttr('hidden');
+        $('#btn_edit_img').show();
     }
 
     function submitForm() {
@@ -255,8 +279,6 @@
         }
     }
 
-
-
     function updateForm() {
         var row = $('#userTable').datagrid('getSelected');
         if (!row) {
@@ -264,68 +286,74 @@
             return;
         }
 
-        // Obtener valores de los campos
+        // Validación básica
         var idType = $('#editTYPE').val();
         var employeeID = $('#editID').val();
         var name = $('#editName').val();
         var genre = $('#editGenre').val();
         var role = $('#editRole').val();
 
-        // Validar que los campos requeridos no estén vacíos
         if (!idType || !employeeID || !name || !genre || !role) {
             $.messager.alert('Error', 'Por favor completa todos los campos obligatorios.', 'error');
             return;
         }
-        var index = $('#userTable').datagrid('getRowIndex', row);
+
+
         // Comparar si hubo cambios
         if (
-            row.id_type === idType &&
-            row.employee_number_id === employeeID &&
-            row.name === name &&
-            row.genre_wname === genre &&
-            row.role_wname === role &&
-            row.nss === $('#nss').val() &&
-            row.curp === $('#curp').val() &&
-            row.rfc === $('#rfc').val() &&
-            row.birth_date === $('#birth_date').val() &&
-            row.phone === $('#phone').val() &&
-            row.address === $('#address').val()
+            valoresIguales(row.id_type, idType) &&
+            valoresIguales(row.employee_number_id, employeeID) &&
+            valoresIguales(row.name, name) &&
+            valoresIguales(row.genre_wname, genre) &&
+            valoresIguales(row.role_wname, role) &&
+            valoresIguales(row.nss, $('#nss').val()) &&
+            valoresIguales(row.curp, $('#curp').val()) &&
+            valoresIguales(row.rfc, $('#rfc').val()) &&
+            valoresIguales(row.birth_date, $('#birth_date').val()) &&
+            valoresIguales(row.phone, $('#phone').val()) &&
+            valoresIguales(row.address, $('#address').val()) &&
+            !$('#input-imagen').val()
         ) {
             $.messager.alert('Info', 'No se detecta ningún cambio.', 'info');
             return;
         }
 
-        var userData = $('#editForm').serialize();
+        const userId = row.employee_number_id;
+        const type = (idType === "1") ? 'RECAM' : 'GPI';
+        const index = $('#userTable').datagrid('getRowIndex', row);
 
-        var userId = row.employee_number_id;
-        userData += '&id=' + userId;
-        var type = '';
-        if (idType == "1") {
-            type = 'RECAM';
-        } else {
-            type = 'GPI';
+        // Crear FormData para incluir imagen
+        var formData = new FormData($('#editForm')[0]);
+        formData.append('id', userId);
+
+        const imagen = $('#input-imagen')[0].files[0];
+        if (imagen) {
+            formData.append('imagen', imagen);
         }
+
         $.ajax({
             url: 'index.php?c=empleados&m=editarEmpleado',
             type: 'POST',
+            data: formData,
+            processData: false, // Importante para FormData
+            contentType: false,
             dataType: 'json',
-            data: userData,
-            cache: false,
             success: function (respuesta) {
                 $.messager.progress('close');
                 if (respuesta.error === true) {
                     $.messager.alert('Error', respuesta.msg, 'error');
                 } else {
                     if (respuesta.cambio) {
-                        // Actualiza la fila en la tabla con los nuevos datos
+                        // Actualizar tabla
                         var updatedData = {
-                            employee_number_id: $('#editID').val(),
+                            employee_number_id: employeeID,
                             type: type,
-                            id_type: $('#editTYPE').val(),
-                            name: $('#editName').val(),
+                            id_type: idType,
+                            name: name,
+                            url_img: respuesta.url,
                             genero: $('#editGenre option:selected').text(),
                             role_name: $('#editRole option:selected').text(),
-                            role_wname: $('#editRole').val(),
+                            role_wname: role,
                             department: $('#editDepartment').val(),
                             supervisor: $('#editSupervisor').val(),
                             nss: $('#nss').val(),
@@ -350,22 +378,14 @@
                             row: updatedData
                         });
 
-                        $('#editTYPE').attr('disabled', true);
-                        $('input[name="labelName"]').prop("disabled", true);
-                        $('input[name="labelEmployeeNumberId"]').prop("disabled", true);
-                        $('select[name="labelGenre"]').prop("disabled", true);
-                        $('select[name="labelRole"]').prop("disabled", true);
-                        $('input[name="vacationDays"]').prop("disabled", true);
-                        $('#nss').prop("disabled", true);
-                        $('#curp').prop("disabled", true);
-                        $('#rfc').prop("disabled", true);
-                        $('#birth_date').prop("disabled", true);
-                        $('#phone').prop("disabled", true);
-                        $('#address').prop("disabled", true);
+                        // Bloquear campos
+                        $('#editTYPE, input[name="labelName"], input[name="labelEmployeeNumberId"]').prop("disabled", true);
+                        $('select[name="labelGenre"], select[name="labelRole"]').prop("disabled", true);
+                        $('input[name="vacationDays"], #nss, #curp, #rfc, #birth_date, #phone, #address').prop("disabled", true);
                         $('#editarUsuario').attr('hidden', true);
-
+                        $('#btn_edit_img').hide();
                         $('#userDialog').dialog('close');
-                        $.messager.alert('Se realizó la petición', '¡El usuario fue actualizado correctamente!', 'info');
+                        $.messager.alert('Petición realizada', '¡El usuario fue actualizado correctamente!', 'info');
                     } else {
                         $.messager.alert('Error', respuesta.msg, 'error');
                     }
@@ -377,7 +397,11 @@
         });
     }
 
-
+    function valoresIguales(a, b) {
+        const va = (a === null || a === undefined) ? '' : a.toString().trim();
+        const vb = (b === null || b === undefined) ? '' : b.toString().trim();
+        return va === vb;
+    }
 
     function cambiarEstado() {
         var row = $('#userTable').datagrid('getSelected');
@@ -579,8 +603,9 @@
         const puesto = $('#r_puesto').textbox('getValue');
         const fechaInicio = $('#r_fecha_inicio').datebox('getValue');
         const fechaFin = $('#r_fecha_fin').datebox('getValue');
+        const estado = $('#r_estado').textbox('getValue');
 
-        if (!empresa && !genero && !puesto && !fechaInicio && !fechaFin) {
+        if (!empresa && !genero && !puesto && !fechaInicio && !fechaFin && !estado) {
             $.messager.alert('Validación', 'Debes llenar al menos un campo para generar el reporte.', 'warning');
             return;
         }
@@ -599,7 +624,8 @@
                 genero: genero,
                 puesto: puesto,
                 fechaInicio: fechaInicio,
-                fechaFin: fechaFin
+                fechaFin: fechaFin,
+                estado: estado
             },
             cache: false,
             success: function (respuesta) {
@@ -648,150 +674,170 @@
 </style>
 
 <body>
-<div class="container-fluid py-4">
-    <!-- Tabla de usuarios -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <table id="userTable" class="easyui-datagrid w-100" title="Gestión de usuarios"
-                style="height:360px;" data-options="singleSelect:true,collapsible:true" toolbar="#toolbar">
-                <thead>
-                    <tr>
-                        <th data-options="field:'employee_number_id',width:100" align="center">Num Emp</th>
-                        <th data-options="field:'name',width:280">Nombre</th>
-                        <th data-options="field:'type',width:100" align="center">Empresa</th>
-                        <th data-options="field:'estado',width:100" align="center">Estado</th>
-                        <th data-options="field:'department',width:130" align="center">Departamento</th>
-                        <th data-options="field:'role_name',width:240">Cargo</th>
-                        <th data-options="field:'supervisor',width:280">Supervisor</th>
-                        <th data-options="field:'hire_date',width:155" align="center">Fecha de alta</th>
-                        <th data-options="field:'change_date',width:280" align="center">Cambio de estado</th>
-                        <th data-options="field:'change_type',width:155" align="center">Realizado</th>
-                        <th data-options="field:'role_wname',width:155" hidden></th>
-                        <th data-options="field:'genre_wname',width:155" hidden></th>
-                    </tr>
-                </thead>
-            </table>
+    <div class="container-fluid py-4">
+        <!-- Tabla de usuarios -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <table id="userTable" class="easyui-datagrid w-100" title="Gestión de usuarios" style="height:360px;"
+                    data-options="singleSelect:true,collapsible:true" toolbar="#toolbar">
+                    <thead>
+                        <tr>
+                            <th data-options="field:'employee_number_id',width:100" align="center">Num Emp</th>
+                            <th data-options="field:'name',width:280">Nombre</th>
+                            <th data-options="field:'type',width:100" align="center">Empresa</th>
+                            <th data-options="field:'estado',width:100" align="center">Estado</th>
+                            <th data-options="field:'department',width:130" align="center">Departamento</th>
+                            <th data-options="field:'role_name',width:240">Cargo</th>
+                            <th data-options="field:'supervisor',width:280">Supervisor</th>
+                            <th data-options="field:'hire_date',width:155" align="center">Fecha de alta</th>
+                            <th data-options="field:'change_date',width:280" align="center">Cambio de estado</th>
+                            <th data-options="field:'change_type',width:155" align="center">Realizado</th>
+                            <th data-options="field:'role_wname',width:155" hidden></th>
+                            <th data-options="field:'genre_wname',width:155" hidden></th>
+                        </tr>
+                    </thead>
+                </table>
 
-            <!-- Botones de la tabla -->
-            <div id="toolbar" class="mt-2">
-                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                    onclick="newUser()">Nuevo Usuario</a>
-                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
-                    onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
-                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true"
-                    onclick="openModalReport()">Generar Reporte</a>
+                <!-- Botones de la tabla -->
+                <div id="toolbar" class="mt-2">
+                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
+                        onclick="newUser()">Nuevo Usuario</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
+                        onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true"
+                        onclick="openModalReport()">Generar Reporte</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de edición -->
+        <div class="row">
+            <div class="col-12">
+                <form id="editForm">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">Detalles del Usuario</h4>
+                            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true"
+                                onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-2 text-center">
+                                <img src="assets/img/empleados/sin_imagen.png" id="preview-imagen"
+                                    style="width: 260px; height: 260px; object-fit: cover; border: 1px solid black;"
+                                    class="mb-2 rounded" />
+
+
+                                <!-- Botón con estilo Bootstrap -->
+                                <label for="input-imagen" class="btn btn-primary btn-sm w-100" id="btn_edit_img">
+                                    Subir Imagen
+                                </label>
+                                <input type="file" id="input-imagen" accept="image/*" style="display: none;" />
+                            </div>
+
+
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-1" id="cont_estado">
+                                        <label>Estado</label>
+                                        <input type="text" class="form-control" disabled value="BAJA"
+                                            style="background-color: red;color:white">
+                                    </div>
+                                    <div class="col-md-2" id="cont_f_estado">
+                                        <label>Fecha Baja</label>
+                                        <input type="text" class="form-control" id="chan_f_b" disabled
+                                            style="background-color: red;color:white">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label>#</label>
+                                        <input type="text" class="form-control" id="editID" name="labelEmployeeNumberId"
+                                            disabled>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label>Empresa</label>
+                                        <select id="editTYPE" name="labelType" class="form-control" disabled>
+                                            <option value=""></option>
+                                            <option value="0">GPI</option>
+                                            <option value="1">RECAM</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Nombre</label>
+                                        <input type="text" class="form-control" id="editName" name="labelName" disabled>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Fecha de ingreso</label>
+                                        <input type="text" class="form-control" name="labelHireDate" readonly disabled>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label>Género</label>
+                                        <select id="editGenre" name="labelGenre" class="form-control" disabled>
+                                            <option value=""></option>
+                                            <option value="0">Femenino</option>
+                                            <option value="1">Masculino</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>NSS</label>
+                                        <input type="text" class="form-control" id="nss" name="nss" disabled>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>CURP</label>
+                                        <input type="text" class="form-control" id="curp" name="curp" disabled>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>RFC</label>
+                                        <input type="text" class="form-control" id="rfc" name="rfc" disabled>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <hr>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label>Fecha de nacimiento</label>
+                                        <input type="date" class="form-control" id="birth_date" name="birth_date"
+                                            disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label>Teléfono</label>
+                                        <input type="number" class="form-control" id="phone" name="phone" disabled>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label>Dirección</label>
+                                        <input type="text" class="form-control" id="address" name="address" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <label>Puesto del empleado</label>
+                                <select id="editRole" name="labelRole" class="form-control"
+                                    onchange="consultarDatosExtra()" disabled></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Departamento</label>
+                                <input type="text" class="form-control" id="editDepartment" name="labelDepartment"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label>Supervisor</label>
+                            <input type="text" class="form-control" id="editSupervisor" name="labelSupervisor" disabled>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-warning w-100" id="editarUsuario"
+                                onclick="updateForm()" hidden>Editar</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-
-    <!-- Formulario de edición -->
-    <div class="row">
-        <div class="col-12">
-            <form id="editForm">
-                <div class="card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0">Detalles del Usuario</h4>
-                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true"
-                            onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
-                    </div>
-
-                    <div class="row mb-2">
-                        <div class="col-md-4">
-                            <label>#</label>
-                            <input type="text" class="form-control" id="editID" name="labelEmployeeNumberId" disabled>
-                        </div>
-                        <div class="col-md-8">
-                            <label>Empresa</label>
-                            <select id="editTYPE" name="labelType" class="form-control" disabled>
-                                <option value=""></option>
-                                <option value="0">GPI</option>
-                                <option value="1">RECAM</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>Nombre</label>
-                        <input type="text" class="form-control" id="editName" name="labelName" disabled>
-                    </div>
-
-                    <div class="row mb-2">
-                        <div class="col-md-6">
-                            <label>Fecha de ingreso</label>
-                            <input type="text" class="form-control" name="labelHireDate" readonly disabled>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Género</label>
-                            <select id="editGenre" name="labelGenre" class="form-control" disabled>
-                                <option value=""></option>
-                                <option value="0">Femenino</option>
-                                <option value="1">Masculino</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>NSS</label>
-                        <input type="text" class="form-control" id="nss" name="nss" disabled>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>CURP</label>
-                        <input type="text" class="form-control" id="curp" name="curp" disabled>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>RFC</label>
-                        <input type="text" class="form-control" id="rfc" name="rfc" disabled>
-                    </div>
-
-                    <hr>
-
-                    <div class="row mb-2">
-                        <div class="col-md-6">
-                            <label>Fecha de nacimiento</label>
-                            <input type="date" class="form-control" id="birth_date" name="birth_date" disabled>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Teléfono</label>
-                            <input type="number" class="form-control" id="phone" name="phone" disabled>
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>Dirección</label>
-                        <input type="text" class="form-control" id="address" name="address" disabled>
-                    </div>
-
-                    <hr>
-
-                    <div class="row mb-2">
-                        <div class="col-md-6">
-                            <label>Puesto del empleado</label>
-                            <select id="editRole" name="labelRole" class="form-control"
-                                onchange="consultarDatosExtra()" disabled></select>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Departamento</label>
-                            <input type="text" class="form-control" id="editDepartment" name="labelDepartment"
-                                disabled>
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <label>Supervisor</label>
-                        <input type="text" class="form-control" id="editSupervisor" name="labelSupervisor" disabled>
-                    </div>
-
-                    <div class="mt-4">
-                        <button type="button" class="btn btn-warning w-100" id="editarUsuario"
-                            onclick="updateForm()" hidden>Editar</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 </body>
 
@@ -872,14 +918,24 @@
 
     <form id="formReporte" method="post" style="display: flex; flex-direction: column; gap: 10px;">
         <!-- Empresa -->
-        <div>
-            <label for="empresa">Empresa:</label>
-            <select id="r_empresa" name="empresa" class="easyui-combobox" style="width:100%" editable="false"
-                panelHeight="auto">
-                <option value="">-- Selecciona una empresa --</option>
-                <option value="GPI">GPI</option>
-                <option value="RECAM">RECAM</option>
-            </select>
+        <div class="row" style="width: 100%;">
+            <div class="col-md-6">
+                <label for="r_estado">Estado:</label>
+                <select id="r_estado" name="r_estado" class="easyui-combobox form-control" style="width:100%"
+                    editable="false" panelHeight="auto">
+                    <option value="1">ACTIVO</option>
+                    <option value="0">BAJA</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="empresa">Empresa:</label>
+                <select id="r_empresa" name="empresa" class="easyui-combobox form-control" style="width:100%"
+                    editable="false" panelHeight="auto">
+                    <option value="">-- Selecciona una empresa --</option>
+                    <option value="0">GPI</option>
+                    <option value="1">RECAM</option>
+                </select>
+            </div>
         </div>
 
         <!-- Rango de fechas de ingreso -->
