@@ -87,6 +87,7 @@ class empleados_controller
     {
         $data['employee_number_id'] = $_POST['employee_number_id'];
         $data['estado'] = $_POST['estado'];
+        $data['fecha_cambio'] = $_POST['fecha_cambio'];
         
         echo $this->model->cambiarEstado($data);
     }

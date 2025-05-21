@@ -134,14 +134,15 @@ class empleados__model
 
             -- 🔍 Solo el cambio más reciente por empleado
             LEFT JOIN (
-                SELECT esc.*
-                FROM employee_status_changes esc
-                INNER JOIN (
-                    SELECT employee_id, MAX(change_date) AS max_date
-                    FROM employee_status_changes
-                    GROUP BY employee_id
-                ) latest ON esc.employee_id = latest.employee_id AND esc.change_date = latest.max_date
+                SELECT *
+                FROM (
+                    SELECT esc.*,
+                        ROW_NUMBER() OVER (PARTITION BY esc.employee_id ORDER BY esc.change_date DESC) AS rn
+                    FROM employee_status_changes esc
+                ) AS ranked
+                WHERE rn = 1
             ) emp_last ON emp_last.employee_id = employee.employee_number_id
+
 
             LEFT JOIN users ON users.id = emp_last.changed_by_user_id
 
@@ -359,6 +360,8 @@ class empleados__model
             if (move_uploaded_file($data['imagen']['tmp_name'], $rutaDestino)) {
                 $set .= "url_img = '" . $rutaDestino . "', ";
             }
+        } else {
+            $rutaDestino = null;
         }
 
         $set .= "updated_by = " . $_SESSION['id'] . ", ";
@@ -448,7 +451,7 @@ class empleados__model
         $values = "";
         $values .= '' . $data['employee_number_id'] . ',';
         $values .= '"' . $cambio . '",';
-        $values .= 'NOW(),';
+        $values .= '"' . $data['fecha_cambio'] . '",';
         $values .= '' . $id . '';
 
         $sql = "INSERT INTO employee_status_changes (

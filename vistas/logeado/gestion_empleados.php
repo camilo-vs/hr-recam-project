@@ -350,7 +350,7 @@
                             type: type,
                             id_type: idType,
                             name: name,
-                            url_img: respuesta.url,
+                            url_img: respuesta.url ? respuesta.url : row.url_img,
                             genero: $('#editGenre option:selected').text(),
                             role_name: $('#editRole option:selected').text(),
                             role_wname: role,
@@ -405,82 +405,110 @@
 
     function cambiarEstado() {
         var row = $('#userTable').datagrid('getSelected');
-        var index = $('#userTable').datagrid('getRowIndex', row);
-        if (row.estado == 'ACTIVO') {
-            cambio = 'BAJA';
-            estado = 0;
-        } else {
-            cambio = 'ACTIVO';
-            estado = 1;
+        if (!row) {
+            $.messager.alert('Error', 'Selecciona un usuario.', 'error');
+            return;
         }
-        $.messager.confirm('Confirmación', 'Se cambiara el estado a ' + cambio + ' del usuario ' + row.name + ' ¿Está seguro?', function (r) {
-            if (r) {
-                $.ajax({
-                    url: 'index.php?c=empleados&m=cambiarEstado',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        employee_number_id: row.employee_number_id,
-                        estado: estado
-                    },
-                    cache: false,
-                    success: function (respuesta) {
-                        if (respuesta.error === true) {
-                            $.messager.alert('Error', respuesta.msg, 'error');
-                        } else {
-                            if (respuesta.cambio) {
-                                var updatedData = {
-                                    estado: cambio,
-                                    update_date: new Date().toLocaleString('es-ES', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit'
-                                    }).replace(",", ""),
-                                    updated_by: respuesta.created_by,
-                                    change_date: new Date().toLocaleString('es-ES', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit'
-                                    }).replace(",", ""),
-                                    change_type: respuesta.id_updated.toUpperCase()
-                                };
 
-                                $('#userTable').datagrid('updateRow', {
-                                    index: index,
-                                    row: updatedData
-                                });
-                                if (estado == 1) {
-                                    $('#editButton').linkbutton('enable');
-                                    $('input[name="labelName"]').prop("disabled", true);
-                                    $('select[name="labelGenre"]').prop("disabled", true);
-                                    $('select[name="labelRole"]').prop("disabled", true);
-                                    $('input[name="vacationDays"]').prop("disabled", true);
-                                    $('#editarUsuario').attr('hidden', true);
-                                } else {
-                                    $('#editButton').linkbutton('disable');
-                                    $('input[name="labelName"]').prop("disabled", true);
-                                    $('select[name="labelGenre"]').prop("disabled", true);
-                                    $('select[name="labelRole"]').prop("disabled", true);
-                                    $('input[name="vacationDays"]').prop("disabled", true);
-                                    $('#editarUsuario').attr('hidden', true);
-                                }
-                                $.messager.alert('Se realizó la petición', '¡El usuario cambio su estado a ' + cambio + '!', 'info');
-                            } else {
-                                $.messager.alert('Error', respuesta.msg, 'error');
-                            }
-                        }
+        var index = $('#userTable').datagrid('getRowIndex', row);
+        var cambio = (row.estado == 'ACTIVO') ? 'BAJA' : 'ACTIVO';
+        var estado = (row.estado == 'ACTIVO') ? 0 : 1;
+
+        // Crear el div y almacenarlo en una variable
+        var $dialog = $('<div></div>').append(`
+        <div style="padding:15px;">
+            <label>Selecciona una fecha:</label><br>
+            <input type="date" id="fechaCambio" style="width:100%; margin-top:5px;">
+        </div>
+    `);
+
+        $dialog.dialog({
+            modal: true,
+            title: 'Fecha del cambio de estado',
+            width: 350,
+            height: 180,
+            closed: false,
+            cache: false,
+            buttons: [{
+                text: 'Confirmar',
+                handler: function () {
+                    var fecha = $('#fechaCambio').val();
+                    if (!fecha) {
+                        $.messager.alert('Error', 'Por favor selecciona una fecha.', 'error');
+                        return;
                     }
-                });
-            }
-        });
 
+                    $.messager.confirm('Confirmación', 'Se cambiará el estado a ' + cambio + ' del usuario ' + row.name + '. ¿Está seguro?', function (r) {
+                        if (r) {
+                            $.ajax({
+                                url: 'index.php?c=empleados&m=cambiarEstado',
+                                type: 'POST',
+                                dataType: 'json',
+                                data: {
+                                    employee_number_id: row.employee_number_id,
+                                    estado: estado,
+                                    fecha_cambio: fecha
+                                },
+                                cache: false,
+                                success: function (respuesta) {
+                                    if (respuesta.error === true) {
+                                        $.messager.alert('Error', respuesta.msg, 'error');
+                                    } else if (respuesta.cambio) {
+
+                                        var partes = fecha.split('-'); // [yyyy, mm, dd]
+                                        var fechaFormateada = partes[2] + '/' + partes[1] + '/' + partes[0];
+                                        var updatedData = {
+                                            estado: cambio,
+                                            update_date: new Date().toLocaleString('es-ES'),
+                                            updated_by: respuesta.created_by,
+                                            change_date: fechaFormateada,
+                                            change_type: respuesta.id_updated.toUpperCase()
+                                        };
+
+                                        $('#userTable').datagrid('updateRow', {
+                                            index: index,
+                                            row: updatedData
+                                        });
+
+                                        if (estado == 1) {
+                                            $('#cont_estado').hide();
+                                            $('#cont_f_estado').hide();
+                                            $('#editButton').linkbutton('enable');
+                                        } else {
+                                            $('#cont_estado').show();
+                                            $('#chan_f_b').val(fechaFormateada);
+                                            $('#cont_f_estado').show();
+                                            $('#editButton').linkbutton('disable');
+                                        }
+
+                                        $('input[name="labelName"]').prop("disabled", true);
+                                        $('select[name="labelGenre"]').prop("disabled", true);
+                                        $('select[name="labelRole"]').prop("disabled", true);
+                                        $('input[name="vacationDays"]').prop("disabled", true);
+                                        $('#editarUsuario').attr('hidden', true);
+
+                                        $.messager.alert('Éxito', '¡El usuario cambió su estado a ' + cambio + '!', 'info');
+                                    } else {
+                                        $.messager.alert('Error', respuesta.msg, 'error');
+                                    }
+
+                                    // Cerrar el diálogo al terminar
+                                    $dialog.dialog('close');
+                                }
+                            });
+                        }
+                    });
+                }
+            }, {
+                text: 'Cancelar',
+                handler: function () {
+                    $dialog.dialog('close');
+                }
+            }]
+        });
     }
+
+
 
 
     function consultarNombre() {
