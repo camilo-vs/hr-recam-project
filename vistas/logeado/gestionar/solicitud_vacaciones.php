@@ -148,6 +148,7 @@
                 if (row.estado === 'CREADA' || row.estado === 'PROCESO') {
                     $('#subirContsVacaciones').hide();
                     $('#editButton').attr('hidden', false);
+                    $('#editButton').linkbutton('enable');
                     if (row.estado === 'PROCESO') {
                         $('#genButton').attr('hidden', false);
                         $('#bajaButton').linkbutton('enable');
@@ -1062,7 +1063,7 @@
             const feriados = feriadosPorAnio[year] || [];
 
             // Sábado (6) y domingo (0) no válidos para turno 1 o 2
-            if ((turno === '1' || turno === '2') && (date.day() === 0 || date.day() === 6)) {
+            if ((turno === '0' || turno === '1' || turno === '2') && (date.day() === 0 || date.day() === 6)) {
                 return false;
             }
 
@@ -1351,6 +1352,7 @@
             if (r) {
                 var employee_number = $('#editID').val();
                 var hire_date = $('#editHireDate').val();
+                var txt_tipo_periodo = '';
                 $.messager.progress({
                     title: 'Procesando...',
                     msg: 'Por favor espere mientras se crea la solicitud.'
@@ -1371,12 +1373,18 @@
                             $.messager.alert('Error', respuesta.msg, 'error');
                         } else {
                             if (respuesta.creado) {
+                                if (switchElement.checked) {
+                                    txt_tipo_periodo = 'ADELANTADO';
+                                } else {
+                                    txt_tipo_periodo = 'ACTUAL';
+                                }
                                 var newRow = {
                                     request_vacation_id: respuesta.id,
                                     estado: 'CREADA',
                                     employee_name: $('#editName').val(),
                                     year: respuesta.year,
-                                    year_i: respuesta.year_i
+                                    year_i: respuesta.year_i,
+                                    tipo_periodo: txt_tipo_periodo
                                 }
                                 $('#userTable2').datagrid('insertRow', {
                                     index: 0,
@@ -1416,7 +1424,6 @@
     $(function () {
         var dg = $('#userTable2');
 
-        // Definir el estilo dinámico en base a la columna 'estado'
         var estadoCol = dg.datagrid('getColumnOption', 'estado');
         estadoCol.styler = function (value, row, index) {
             if (value === 'CREADA') {
@@ -1432,12 +1439,27 @@
             }
         };
 
-        // Refrescar las filas para aplicar los estilos
+        dg.datagrid('reload');
+
+        var dg = $('#userTable2');
+
+        var peridoCol = dg.datagrid('getColumnOption', 'tipo_periodo');
+        peridoCol.styler = function (value, row, index) {
+            if (value === 'ACTUAL') {
+                return 'background-color: #2D3142; color: white; font-weight: bold;';
+            } else if (value === 'ADELANTADO') {
+                return 'background-color: #EF8354; color: white; font-weight: bold;';
+            } else if (value === 'ANTERIOR') {
+                return 'background-color: #BFC0C0; color: white; font-weight: bold;';
+            } else {
+                return '';
+            }
+        };
+
         dg.datagrid('reload');
 
         var dg = $('#salidaTable');
 
-        // Definir el estilo dinámico en base a la columna 'estado'
         var estadoCol = dg.datagrid('getColumnOption', 'estado');
         estadoCol.styler = function (value, row, index) {
             if (value === 'CREADA') {
@@ -1453,12 +1475,10 @@
             }
         };
 
-        // Refrescar las filas para aplicar los estilos
         dg.datagrid('reload');
 
         var dg = $('#ingresoTable');
 
-        // Definir el estilo dinámico en base a la columna 'estado'
         var estadoCol = dg.datagrid('getColumnOption', 'estado');
         estadoCol.styler = function (value, row, index) {
             if (value === 'CREADA') {
@@ -1474,7 +1494,6 @@
             }
         };
 
-        // Refrescar las filas para aplicar los estilos
         dg.datagrid('reload');
     });
 
@@ -1713,16 +1732,20 @@
                 <div class="col-md-6">
                     <!-- Segunda sección (30%) -->
                     <form id="editForm" action="post" hidden>
-                        <div class="container" style="width: 600px;">
+                        <div class="container">
                             <div class="row">
                                 <h2 class="col-sm-2">Detalles</h2>
                             </div>
-                            <div class="input-group mb-2 w-25">
-                                <span class="input-group-text" id="basic-addon1">#</span>
-                                <input type="text" class="form-control" name="labelEmployeeNumberId" id="editID"
-                                    aria-describedby="basic-addon1" readonly disabled>
+                            <div class="d-flex mb-2 align-items-center">
+                                <div class="input-group me-2" style="width: 120px;">
+                                    <span class="input-group-text" id="basic-addon1">#</span>
+                                    <input type="text" class="form-control" name="labelEmployeeNumberId" id="editID"
+                                        aria-describedby="basic-addon1" readonly disabled>
+                                </div>
+                                <input type="text" class="form-control" id="editName" name="labelName" disabled>
                             </div>
-                            <input type="text" class="form-control w-75 mb-2" id="editName" name="labelName" disabled>
+
+
                             <div class="row mb-2">
                                 <div class="col-sm-4">
                                     <p class="mb-0">Fecha de ingreso:</p>
@@ -1812,18 +1835,20 @@
                                 </thead>
                             </table>
                             <div id="toolbar2">
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                                    onclick="crearSolicitudI()" id="solicitar">Solicitar</a>
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
-                                    plain="true" onclick="cambiarEstadoSI()" id="cambiarEstadoI" disabled>Cambiar
-                                    Estado</a>
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
-                                    onclick="document.getElementById('fileInputIngreso').click();"
-                                    id="subirContsIngreso">
-                                    Subir Archivo
-                                </a>
-                                <input type="file" id="fileInputIngreso" style="display: none;" accept=".pdf"
-                                    onchange="handleFileUpload(this.files[0],0)" />
+                                <?php if ($_SESSION['user_type'] != 3): ?>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
+                                        onclick="crearSolicitudI()" id="solicitar">Solicitar</a>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
+                                        plain="true" onclick="cambiarEstadoSI()" id="cambiarEstadoI" disabled>Cambiar
+                                        Estado</a>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
+                                        onclick="document.getElementById('fileInputIngreso').click();"
+                                        id="subirContsIngreso">
+                                        Subir Archivo
+                                    </a>
+                                    <input type="file" id="fileInputIngreso" style="display: none;" accept=".pdf"
+                                        onchange="handleFileUpload(this.files[0],0)" />
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div id="TabSalida" title="Salida" style="display:none;">
@@ -1843,17 +1868,19 @@
                                 </thead>
                             </table>
                             <div id="toolbar1">
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                                    onclick="crearSolicitudS()" id="solicitar">Solicitar</a>
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
-                                    plain="true" onclick="cambiarEstadoSI()" id="cambiarEstadoR" disabled>Cambiar
-                                    Estado</a>
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
-                                    onclick="document.getElementById('fileInputSalida').click();" id="subirContsSalida">
-                                    Subir Archivo
-                                </a>
-                                <input type="file" id="fileInputSalida" style="display: none;" accept=".pdf"
-                                    onchange="handleFileUpload(this.files[0],1)" />
+                                <?php if ($_SESSION['user_type'] != 3): ?>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
+                                        onclick="crearSolicitudS()" id="solicitar">Solicitar</a>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
+                                        plain="true" onclick="cambiarEstadoSI()" id="cambiarEstadoR" disabled>Cambiar
+                                        Estado</a>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
+                                        onclick="document.getElementById('fileInputSalida').click();" id="subirContsSalida">
+                                        Subir Archivo
+                                    </a>
+                                    <input type="file" id="fileInputSalida" style="display: none;" accept=".pdf"
+                                        onchange="handleFileUpload(this.files[0],1)" />
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div id="tabVacaciones" title="Vacaciones" style="display:none;">
@@ -1872,54 +1899,61 @@
                                         <th data-options="field:'estado',width:90" align="center">Estado</th>
                                         <th data-options="field:'days',width:60" align="center">Dias</th>
                                         <th data-options="field:'request_date',width:90" align="center">Fecha</th>
-                                        <th data-options="field:'year_i',width:60" align="center">Inicio</th>
-                                        <th data-options="field:'year',width:60" align="center">Fin</th>
+                                        <th data-options="field:'year_i',width:60" align="center" hidden>Inicio</th>
+                                        <th data-options="field:'year_i',width:60" align="center" hidden>Inicio</th>
+                                        <th data-options="field:'tipo_periodo',width:120" align="center">Periodo</th>
                                     </tr>
                                 </thead>
                             </table>
                             <div id="toolbar">
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                                    onclick="crearSolicitud()" id="solicitarVac" hidden>Solicitar</a>
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
-                                    plain="true" onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
-                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
-                                    onclick="document.getElementById('fileInputVacaciones').click();"
-                                    id="subirContsVacaciones">
-                                    Subir Archivo
-                                </a>
-                                <input type="file" id="fileInputVacaciones" style="display: none;" accept=".pdf"
-                                    onchange="handleFileUpload(this.files[0],2)" />
+                                <?php if ($_SESSION['user_type'] != 3): ?>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
+                                        onclick="crearSolicitud()" id="solicitarVac" hidden>Solicitar</a>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove"
+                                        plain="true" onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
+                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-redo" plain="true"
+                                        onclick="document.getElementById('fileInputVacaciones').click();"
+                                        id="subirContsVacaciones">
+                                        Subir Archivo
+                                    </a>
+                                    <input type="file" id="fileInputVacaciones" style="display: none;" accept=".pdf"
+                                        onchange="handleFileUpload(this.files[0],2)" />
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
+                    <!-- Formulario Vacaciones -->
                     <form id="editFormVac" action="post" hidden>
-                        <div class="container" style="width: 600px;">
-                            <div class="row">
-                                <h4 class="col-sm-8">Detalles de la solicitud</h4>
-                                <div class="col-sm-4">
-                                    <a href="javascript:void(0)" class="easyui-linkbutton " iconCls="icon-edit"
-                                        plain="true" onclick="editUser()" id="editButton"
-                                        style="border: 1px solid black">Editar solicitud</a>
-                                </div>
-
+                        <div class="container-fluid">
+                            <div class="row align-items-center mb-3">
+                                <h4 class="col-sm-8 mb-0">Detalles de la solicitud</h4>
+                                <?php if ($_SESSION['user_type'] != 3): ?>
+                                    <div class="col-sm-4 text-sm-end mt-2 mt-sm-0">
+                                        <a href="javascript:void(0)" class="easyui-linkbutton " iconCls="icon-edit"
+                                            onclick="editUser()" id="editButton">
+                                            Editar solicitud
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <div class="row py-2">
+
+                            <div class="row g-3 mb-3">
                                 <input type="hidden" class="form-control" name="labelRV">
-                                <div class="col-sm-4">
-                                    <p class="mb-0">Fecha de solicitud</p>
+                                <div class="col-12 col-sm-4">
+                                    <label for="editDateR" class="form-label">Fecha de solicitud</label>
                                     <input type="date" class="form-control" id="editDateR" name="labelDateR" disabled>
                                 </div>
-                                <div class="col-sm-4">
-                                    <p class="mb-0">Dias solicitados</p>
+                                <div class="col-12 col-sm-4">
+                                    <label for="editDays" class="form-label">Días solicitados</label>
                                     <input type="number" class="form-control" id="editDays" name="labelDays"
                                         onchange="calculateEndDate()" disabled>
                                 </div>
-                                <div class="col-sm-4">
-                                    <p class="mb-0">Turno del empleado:</p>
-                                    <select id="editTurno" name="labelTurno" class="form-control"
+                                <div class="col-12 col-sm-4">
+                                    <label for="editTurno" class="form-label">Turno del empleado</label>
+                                    <select id="editTurno" name="labelTurno" class="form-select"
                                         onchange="calculateEndDate()" disabled>
                                         <option value="0">Matutino</option>
                                         <option value="1">Nocturno</option>
@@ -1927,83 +1961,96 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row py-2">
-                                <div class="col-sm-6">
-                                    <p class="mb-0">Fecha de comienzo</p>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-sm-6">
+                                    <label for="editDateC" class="form-label">Fecha de comienzo</label>
                                     <input type="date" class="form-control" id="editDateC" name="labelDateC"
                                         onchange="calculateEndDate()" disabled>
                                 </div>
                             </div>
+
                             <hr>
-                            <div class="row py-2">
-                                <div class="col-sm-6">
-                                    <p class="mb-0">Fecha de fin</p>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-sm-6">
+                                    <label for="editDateF" class="form-label">Fecha de fin</label>
                                     <input type="date" class="form-control" id="editDateF" name="labelDateF" disabled>
                                 </div>
-                                <div class="col-sm-6">
-                                    <p class="mb-0">Retoma labores:</p>
+                                <div class="col-12 col-sm-6">
+                                    <label for="editDateL" class="form-label">Retoma labores</label>
                                     <input type="date" class="form-control" id="editDateL" name="labelDateL" disabled>
                                 </div>
                                 <input type="number" class="form-control" name="labelVacationDaysIn" id="vacationDaysIn"
                                     hidden>
                             </div>
-                            <iframe id="doc_formato_vac" src="" width="100%" height="600px"></iframe>
-                            <div class="row py-2">
-                                <div class="col-sm-12">
-                                    <button type="button" class="btn btn-warning" style="width: 100%;"
-                                        id="editarUsuario" onclick="updateForm()" hidden>Editar</button>
+
+                            <iframe id="doc_formato_vac" src="" width="100%" height="600px" class="mb-3"></iframe>
+
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-warning w-100" id="editarUsuario"
+                                        onclick="updateForm()" hidden>Editar</button>
                                 </div>
-                                <div class="col-sm-12">
-                                    <button type="button" class="btn btn-warning" id="genButton" style="width: 100%;"
-                                        hidden>Generar
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-warning w-100" id="genButton" hidden>Generar
                                         solicitud</button>
                                 </div>
                             </div>
-
                         </div>
                     </form>
+
+                    <!-- Formulario Salidas -->
                     <form id="editFormSI" action="post" hidden>
-                        <div class="container" style="width: 600px;">
-                            <div class="row">
-                                <h4 class="col-sm-8">Detalles de la solicitud</h4>
-                                <div class="col-sm-4">
-                                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit"
-                                        plain="true" onclick="editSI()" id="editButtonSal"
-                                        style="border: 1px solid black;">Editar solicitud</a>
-                                </div>
+                        <div class="container-fluid" style="max-width: 600px;">
+                            <div class="row align-items-center mb-3">
+                                <h4 class="col-sm-8 mb-0">Detalles de la solicitud</h4>
+                                <?php if ($_SESSION['user_type'] != 3): ?>
+                                    <div class="col-sm-4 text-sm-end mt-2 mt-sm-0">
+                                        <a href="javascript:void(0)" class="easyui-linkbutton " iconCls="icon-edit"
+                                            onclick="editSI()" id="editButtonSal">
+                                            Editar solicitud
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <div class="row py-2">
+
+                            <div class="row g-3 mb-3">
                                 <input type="hidden" class="form-control" name="labelR" id="editR" readonly disabled>
-                                <div class="col-sm-6">
-                                    <p class="mb-0">Fecha y hora solicitados</p>
+                                <div class="col-12 col-md-6">
+                                    <label for="editDateRequired" class="form-label">Fecha y hora solicitados</label>
                                     <input type="datetime-local" class="form-control" id="editDateRequired"
                                         name="labelDateRequired" onchange="calculateEndDate()" disabled>
                                 </div>
-                                <div class="col-sm-6">
-                                    <p class="mb-0">Fecha de solicitud</p>
+                                <div class="col-12 col-md-6">
+                                    <label for="editDateRequest" class="form-label">Fecha de solicitud</label>
                                     <input type="date" class="form-control" id="editDateRequest" name="labelDateRequest"
                                         disabled>
                                 </div>
                             </div>
-                            <iframe id="doc_formato" src="" width="100%" height="600px"></iframe>
-                            <div class="row py-2">
-                                <div class="col-sm-12">
-                                    <button type="button" class="btn btn-warning" id="editarSI" onclick="updateFormSI()"
-                                        style="width: 100%;" hidden>Editar</button>
-                                </div>
-                                <div class="col-sm-12">
-                                    <button type="button" class="btn btn-warning" id="genButtonS" style="width: 100%;"
-                                        hidden>Generar
-                                        solicitud</button>
-                                    <button type="button" class="btn btn-warning" id="genButtonI" style="width: 100%;"
-                                        hidden>Generar
-                                        solicitud</button>
-                                </div>
-                            </div>
 
+                            <iframe id="doc_formato" src="" width="100%" height="600px" class="mb-3"></iframe>
+
+                            <?php if ($_SESSION['user_type'] != 3): ?>
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-warning w-100" id="editarSI"
+                                            onclick="updateFormSI()" hidden>Editar</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-warning w-100" id="genButtonS" hidden>Generar
+                                            solicitud</button>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-warning w-100" id="genButtonI" hidden>Generar
+                                            solicitud</button>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </form>
                 </div>
+
             </div>
         </div>
     </div>

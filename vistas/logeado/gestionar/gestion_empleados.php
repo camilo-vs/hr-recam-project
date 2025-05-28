@@ -165,7 +165,7 @@
 
     function newUser() {
         $('#crearUsuario').show();
-        $('#userDialog').dialog('open').dialog('setTitle', 'Nuevo Usuario');
+        $('#userDialog').dialog('open').dialog('setTitle', 'Nuevo Empleado');
         $('#userForm').form('clear');
         $('#employee_number_id').val('');
     }
@@ -298,7 +298,6 @@
             return;
         }
 
-
         // Comparar si hubo cambios
         if (
             valoresIguales(row.id_type, idType) &&
@@ -319,7 +318,18 @@
         }
 
         const userId = row.employee_number_id;
-        const type = (idType === "1") ? 'RECAM' : 'GPI';
+        let type;
+        switch (idType) {
+            case "1":
+                type = "RECAM";
+                break;
+            case "2":
+                type = "RECAM - GPI";
+                break;
+            default:
+                type = "GPI";
+        }
+
         const index = $('#userTable').datagrid('getRowIndex', row);
 
         // Crear FormData para incluir imagen
@@ -566,6 +576,8 @@
                 return 'background-color: #577bea; color: white; font-weight: bold;';
             } else if (value === 'RECAM') {
                 return 'background-color: #f5b041; color: white; font-weight: bold;';
+            } else if (value === 'RECAM - GPI') {
+                return 'background-color: #cc25e3; color: white; font-weight: bold;';
             }
             return '';
         };
@@ -706,7 +718,7 @@
         <!-- Tabla de usuarios -->
         <div class="row mb-4">
             <div class="col-12">
-                <table id="userTable" class="easyui-datagrid w-100" title="Gestión de usuarios" style="height:360px;"
+                <table id="userTable" class="easyui-datagrid w-100" title="Gestiónar empleados" style="height:360px;"
                     data-options="singleSelect:true,collapsible:true" toolbar="#toolbar">
                     <thead>
                         <tr>
@@ -728,10 +740,13 @@
 
                 <!-- Botones de la tabla -->
                 <div id="toolbar" class="mt-2">
-                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
-                        onclick="newUser()">Nuevo Usuario</a>
-                    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
-                        onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
+                    <?php if ($_SESSION['user_type'] != 3): ?>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true"
+                            onclick="newUser()">Nuevo Empleado</a>
+                        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true"
+                            onclick="cambiarEstado()" id="bajaButton" disabled>Cambiar Estado</a>
+                    <?php endif; ?>
+
                     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true"
                         onclick="openModalReport()">Generar Reporte</a>
                 </div>
@@ -744,9 +759,11 @@
                 <form id="editForm">
                     <div class="card p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="mb-0">Detalles del Usuario</h4>
-                            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true"
-                                onclick="editUser()" id="editButton" disabled>Editar Usuario</a>
+                            <h4 class="mb-0">Detalles del Empleado</h4>
+                            <?php if ($_SESSION['user_type'] != 3): ?>
+                                <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true"
+                                    onclick="editUser()" id="editButton" disabled>Editar Usuario</a>+
+                            <?php endif; ?>
                         </div>
 
                         <div class="row mb-2">
@@ -777,19 +794,20 @@
                                             style="background-color: red;color:white">
                                     </div>
                                     <div class="col-md-1">
-                                        <label>#</label>
+                                        <label>Num Emp</label>
                                         <input type="text" class="form-control" id="editID" name="labelEmployeeNumberId"
                                             disabled>
                                     </div>
-                                    <div class="col-md-1">
+                                    <div class="col-md-2">
                                         <label>Empresa</label>
                                         <select id="editTYPE" name="labelType" class="form-control" disabled>
                                             <option value=""></option>
                                             <option value="0">GPI</option>
                                             <option value="1">RECAM</option>
+                                            <option value="2">RECAM - GPI</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label>Nombre</label>
                                         <input type="text" class="form-control" id="editName" name="labelName" disabled>
                                     </div>
@@ -870,7 +888,7 @@
 </body>
 
 <!--MODAL-->
-<div id="userDialog" class="easyui-dialog" title="Crear Usuario" style="width:600px;height:auto;padding:10px"
+<div id="userDialog" class="easyui-dialog" title="Crear Empleado" style="width:600px;height:auto;padding:10px"
     closed="true" buttons="#dlg-buttons">
     <form id="userForm" method="post">
         <div class="row">
@@ -962,6 +980,7 @@
                     <option value="">-- Selecciona una empresa --</option>
                     <option value="0">GPI</option>
                     <option value="1">RECAM</option>
+                    <option value="2">RECAM - GPI</option>
                 </select>
             </div>
         </div>

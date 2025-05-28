@@ -21,13 +21,13 @@ class vacaciones__model
 
         $anio = date('Y');
         $anio_i = null;
-        
+
         if ($resFecha && $rowFecha = mysqli_fetch_assoc($resFecha)) {
             $hireDate = $rowFecha['hire_date']; // formato YYYY-MM-DD
             $hireMonthDay = date('m-d', strtotime($hireDate));
             $currentMonthDay = date('m-d');
             $anio_actual = date('Y');
-        
+
             if ($preev_year === true || $preev_year === "true" || $preev_year == 1) {
                 // Periodo adelantado basado en hire_date comparando dia y mes
                 if ($currentMonthDay < $hireMonthDay) {
@@ -50,7 +50,7 @@ class vacaciones__model
                 }
             }
         }
-        
+
         // Construcción de la consulta
         $sql = "SELECT SUM(days) AS total_dias 
             FROM vacation_requests 
@@ -152,29 +152,46 @@ class vacaciones__model
     {
         mysqli_select_db($this->db, "hr_system");
         $sql = "SELECT 
-                    vr.request_vacation_id,
-                    vr.employee_number,
-                    e.name AS employee_name,
-                    e.hire_date,
-                    CASE
-                        WHEN vr.state = 0 THEN 'CREADA'
-                        WHEN vr.state = 1 THEN 'PROCESO'
-                        WHEN vr.state = 2 THEN 'APROBADA'
-                        WHEN vr.state = 3 THEN 'RECHAZADA'
-                        ELSE 'Desconocido'
-                    END AS estado,
-                    DATE_FORMAT(vr.request_date, '%d/%m/%Y') AS request_date,
-                    vr.days,
-                    DATE_FORMAT(vr.start_date, '%d/%m/%Y') AS start_date,
-                    DATE_FORMAT(vr.finish_date, '%d/%m/%Y') AS finish_date,
-                    DATE_FORMAT(vr.back_date, '%d/%m/%Y') AS back_date,
-                    vr.work_shift,
-                    vr.year,
-                    vr.year_i,
-                    c.url as url_doc
-                FROM vacation_requests vr
-                INNER JOIN employees e ON vr.employee_number = e.employee_number_id
-                LEFT JOIN archivo_contancia c ON c.request_vacation_id = vr.request_vacation_id";
+                vr.request_vacation_id,
+                vr.employee_number,
+                e.name AS employee_name,
+                e.hire_date,
+                CASE
+                    WHEN vr.state = 0 THEN 'CREADA'
+                    WHEN vr.state = 1 THEN 'PROCESO'
+                    WHEN vr.state = 2 THEN 'APROBADA'
+                    WHEN vr.state = 3 THEN 'RECHAZADA'
+                    ELSE 'Desconocido'
+                END AS estado,
+                DATE_FORMAT(vr.request_date, '%d/%m/%Y') AS request_date,
+                vr.days,
+                DATE_FORMAT(vr.start_date, '%d/%m/%Y') AS start_date,
+                DATE_FORMAT(vr.finish_date, '%d/%m/%Y') AS finish_date,
+                DATE_FORMAT(vr.back_date, '%d/%m/%Y') AS back_date,
+                vr.work_shift,
+                vr.year,
+                vr.year_i,
+                c.url AS url_doc,
+
+                CASE
+                    WHEN CURRENT_DATE BETWEEN 
+                        STR_TO_DATE(CONCAT(vr.year_i, '-', MONTH(e.hire_date), '-', DAY(e.hire_date)), '%Y-%m-%d')
+                        AND DATE_SUB(STR_TO_DATE(CONCAT(vr.year, '-', MONTH(e.hire_date), '-', DAY(e.hire_date)), '%Y-%m-%d'), INTERVAL 1 DAY)
+                    THEN 'ACTUAL'
+
+                    WHEN CURRENT_DATE < STR_TO_DATE(CONCAT(vr.year_i, '-', MONTH(e.hire_date), '-', DAY(e.hire_date)), '%Y-%m-%d')
+                    THEN 'ADELANTADO'
+
+                    WHEN CURRENT_DATE > DATE_SUB(STR_TO_DATE(CONCAT(vr.year, '-', MONTH(e.hire_date), '-', DAY(e.hire_date)), '%Y-%m-%d'), INTERVAL 1 DAY)
+                        AND vr.year_i >= YEAR(e.hire_date)
+                    THEN 'ANTERIOR'
+
+                    ELSE 'FUERA_DE_PERIODO_VALIDO'
+                END AS tipo_periodo
+
+            FROM vacation_requests vr
+            INNER JOIN employees e ON vr.employee_number = e.employee_number_id
+            LEFT JOIN archivo_contancia c ON c.request_vacation_id = vr.request_vacation_id";
 
         // Agregar condición si se recibe un employee id
 
@@ -272,21 +289,21 @@ class vacaciones__model
     public function crearSolicitud($data)
     {
         mysqli_select_db($this->db, "hr_system");
-    
+
         if (!isset($_SESSION)) {
             session_start();
         }
-    
+
         $employee_number = mysqli_real_escape_string($this->db, $data['employee_number']);
         $hire_date = isset($data['hire_date']) ? $data['hire_date'] : null;
-    
+
         $year = date('Y');
         $year_i = "NULL"; // valor por defecto
-    
+
         // Verificar si ya cumplió un año desde hire_date
         $cumple_un_anio = false;
         $hire_date_iso = null;
-    
+
         if ($hire_date) {
             $fecha_parts = explode('/', $hire_date); // dd/mm/yyyy
             if (count($fecha_parts) === 3) {
@@ -294,13 +311,13 @@ class vacaciones__model
                 $hire_timestamp = strtotime($hire_date_iso);
                 $unAnioDespues = strtotime('+1 year', $hire_timestamp);
                 $ahora = time();
-    
+
                 if ($ahora >= $unAnioDespues) {
                     $cumple_un_anio = true;
                 }
             }
         }
-    
+
         if ($data['preev_year'] == 'true') {
             $hireMonthDay = date('m-d', strtotime($hire_date_iso));
             $currentMonthDay = date('m-d');
@@ -322,7 +339,7 @@ class vacaciones__model
                 if ($hire_date_iso) {
                     $hireMonthDay = date('m-d', strtotime($hire_date_iso));
                     $currentMonthDay = date('m-d');
-    
+
                     if ($currentMonthDay >= $hireMonthDay) {
                         $year_i = $year;
                         $year = $year + 1;
@@ -336,13 +353,13 @@ class vacaciones__model
                 }
             }
         }
-    
+
         // Consulta insert (NULL sin comillas)
         $sql = "INSERT INTO vacation_requests (employee_number, year, year_i)
                 VALUES ('$employee_number', $year, " . ($year_i === "NULL" ? "NULL" : intval($year_i)) . ")";
-    
+
         $result = mysqli_query($this->db, $sql);
-    
+
         if (!$result) {
             $respuesta = array(
                 'error' => true,
@@ -365,10 +382,10 @@ class vacaciones__model
                 'creado' => true,
             );
         }
-    
+
         return json_encode($respuesta);
     }
-    
+
 
     public function crearSolicitudSI($data)
     {

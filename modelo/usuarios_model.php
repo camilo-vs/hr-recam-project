@@ -16,17 +16,17 @@ class usuarios_model
 
         $sql = "SELECT
                 user.id,
-                user.name,
+                UPPER(user.name) as name,
                 CASE
                     WHEN user.active = 1 THEN 'ACTIVO'
                     WHEN user.active = 2 THEN 'BAJA'
                     ELSE 'Desconocido'
                 END AS estado,
-                user_type.name AS user_type,
+                UPPER(user_type.name) AS user_type,
                 DATE_FORMAT(user.creation_date, '%d/%m/%Y %H:%i:%s') AS creation_date,
-                (SELECT name FROM users WHERE id = user.created_by) created_by,
+                (SELECT UPPER(name) FROM users WHERE id = user.created_by) created_by,
                  DATE_FORMAT(user.update_date, '%d/%m/%Y %H:%i:%s') AS update_date,
-                (SELECT name FROM users WHERE id = user.updated_by) updated_by
+                (SELECT UPPER(name) FROM users WHERE id = user.updated_by) updated_by
                 FROM users user inner join user_types user_type on user.user_type = user_type.user_type_id
                 ORDER BY user.creation_date DESC";
         $result = mysqli_query($this->db, $sql);

@@ -1,3 +1,9 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
+
 <!doctype html>
 <html lang="en" data-bs-theme="auto">
 
@@ -123,34 +129,66 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-xl">
-      <!-- Logo ajustado con un tamaño específico -->
-      <a class="navbar-brand" href="index.php?c=paginas&m=inicio">
-        <img src="assets/img/logos/recam_logo_white.png" alt="Logo">
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="index.php?c=paginas&m=inicio">
+      <img src="assets/img/logos/recam_logo_white.png" alt="Logo" style="max-height: 40px;">
+    </a>
 
-      <div class="collapse navbar-collapse" id="navbarsExample07XL">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="index.php?c=paginas&m=inicio">Inicio</a>
-          </li>
-          <li class="nav-item dropdown">
-            <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Gestionar Registros</button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_empleados">Empleados</a>
-              <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_usuarios">Usuarios</a>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="index.php?c=paginas&m=solicitud_vacaciones">Generar Contancias</a>
-          </li>
-       
-        </ul>
-        <a type="button" class="btn btn-light" href="index.php?c=paginas&m=logout"><i class="bi bi-person-fill"></i></a>
+    <!-- Botón solo visible en móviles -->
+    <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Menú horizontal desde md en adelante -->
+    <div class="collapse navbar-collapse d-none d-md-flex" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="index.php?c=paginas&m=inicio">Inicio</a>
+        </li>
+
+        <?php if ($_SESSION['user_type'] <= 3): ?>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Gestionar Registros</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_empleados">Empleados</a></li>
+            <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_cambios">Cambios de Empresa</a></li>
+            <?php if ($_SESSION['user_type'] == 1): ?>
+              <li><a class="dropdown-item" href="index.php?c=paginas&m=gestion_usuarios">Usuarios</a></li>
+            <?php endif; ?>
+          </ul>
+        </li>
+        <?php endif; ?>
+        <li class="nav-item">
+          <a class="nav-link" href="index.php?c=paginas&m=solicitud_vacaciones">Generar Constancias</a>
+        </li>
+      </ul>
+
+      <a class="nav-link text-white" href="index.php?c=paginas&m=logout">Cerrar sesión</a>
+    </div>
+
+    <!-- Menú lateral solo en móviles -->
+    <div class="offcanvas offcanvas-end text-bg-dark d-md-none" tabindex="-1" id="menuLateral" aria-labelledby="menuLateralLabel" style="width: 50%;">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="menuLateralLabel">Menú</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+      </div>
+      <div class="offcanvas-body d-flex flex-column">
+        <a class="nav-link text-white mb-3" href="index.php?c=paginas&m=inicio">Inicio</a>
+
+        <?php if ($_SESSION['user_type'] <= 3): ?>
+          <a class="nav-link text-white mb-3" href="index.php?c=paginas&m=gestion_empleados">Empleados</a>
+          <a class="nav-link text-white mb-3" href="index.php?c=paginas&m=gestion_cambios">Cambios de Empresa</a>
+        <?php endif; ?>
+
+        <?php if ($_SESSION['user_type'] == 1 || $_SESSION['user_type'] == 2): ?>
+          <a class="nav-link text-white mb-3" href="index.php?c=paginas&m=gestion_usuarios">Usuarios</a>
+          <a class="nav-link text-white mb-3" href="index.php?c=paginas&m=solicitud_vacaciones">Generar Constancias</a>
+        <?php endif; ?>
+
+        <hr class="text-white">
+        <a class="nav-link text-white" href="index.php?c=paginas&m=logout">Cerrar sesión</a>
       </div>
     </div>
-  </nav>
+  </div>
+</nav>

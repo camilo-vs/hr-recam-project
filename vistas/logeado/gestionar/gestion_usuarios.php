@@ -132,9 +132,11 @@
                     } else {
                         if (respuesta.creado) {
                             if (respuesta.datos['userType'] == 1) {
-                                tipo = 'Administrador';
-                            } else {
-                                tipo = 'Usuario';
+                                tipo = 'ADMINISTRADOR';
+                            } else  if (respuesta.datos['userType'] == 2) {
+                                tipo = 'RECURSOS HUMANOS';
+                            } else  {
+                                tipo = 'CONTABILIDAD';
                             }
                             var newRow = {
                                 id: respuesta.id,
@@ -378,11 +380,13 @@
         // Definir el estilo dinámico en base a la columna 'user_type'
         var userTypeCol = dg.datagrid('getColumnOption', 'user_type');
         userTypeCol.styler = function (value, row, index) {
-            if (value === 'Administrador') {
-                return 'background-color: blue; color: white; font-weight: bold;';
-            } else if (value === 'Usuario') {
-                return 'background-color: yellow; color: black; font-weight: bold;';
-            } else {
+            if (value === 'ADMINISTRADOR') {
+                return 'background-color: #482c21; color: white; font-weight: bold;';
+            } else if (value === 'RECURSOS HUMANOS') {
+                return 'background-color: #a73e2b; color: white; font-weight: bold;';
+            }else if (value === 'CONTABILIDAD') {
+                return 'background-color: #d07e0e; color: white; font-weight: bold;';
+            }  else {
                 return '';
             }
         };
@@ -404,12 +408,12 @@
                         <tr>
                             <th data-options="field:'id',width:50,hidden:true">ID</th>
                             <th data-options="field:'name',width:200">Nombre</th>
-                            <th data-options="field:'estado',width:200">Estado</th>
-                            <th data-options="field:'user_type',width:150">Tipo Usuario</th>
-                            <th data-options="field:'creation_date',width:175">Fecha de alta</th>
-                            <th data-options="field:'created_by',width:200">Alta por</th>
-                            <th data-options="field:'update_date',width:165">Fecha actualizo</th>
-                            <th data-options="field:'updated_by',width:200">Actualizado por</th>
+                            <th data-options="field:'estado',width:200" align="center">Estado</th>
+                            <th data-options="field:'user_type',width:200" align="center">Tipo Usuario</th>
+                            <th data-options="field:'creation_date',width:175" align="center">Fecha de alta</th>
+                            <th data-options="field:'created_by',width:150" align="center">Alta por</th>
+                            <th data-options="field:'update_date',width:165" align="center">Fecha actualizo</th>
+                            <th data-options="field:'updated_by',width:200" align="center">Actualizado por</th>
                         </tr>
                     </thead>
                 </table>
@@ -430,8 +434,9 @@
                         <div class="form-group py-3">
                             <label for="userType">Tipo de Usuario:</label>
                             <select id="userType" name="userType" class="form-control">
-                                <option value="1">Administrador</option>
-                                <option value="2">Usuario</option>
+                                <option value="1">ADMINISTRADOR</option>
+                                <option value="2">RECURSOS HUMANOS</option>
+                                <option value="3">CONTABILIDAD</option>
                             </select>
                         </div>
                         <div class="form-group py-3">
